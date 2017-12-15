@@ -20,7 +20,7 @@ object FutureView {
           throwable.printStackTrace()
           <.em(^.cls := "text-muted", "Loading failed")
       }
-      .configure(AsyncStateFromProps.constAlways((props, _) => props.transform(attempt => Success(Some(attempt)))))
+      .configure(AsyncStateFromProps.constAlways((_, props) => props.transform(attempt => Success(Some(attempt)))))
       .build
 
   def apply(fut: Future[VdomElement]) = component(fut)

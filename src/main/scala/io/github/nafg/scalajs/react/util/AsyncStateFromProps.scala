@@ -3,7 +3,7 @@ package io.github.nafg.scalajs.react.util
 import scala.concurrent.{ExecutionContext, Future}
 
 import japgolly.scalajs.react.component.builder.Builder.Config
-import japgolly.scalajs.react.component.builder.Lifecycle
+import japgolly.scalajs.react.component.builder.Lifecycle.StateRW
 import japgolly.scalajs.react.{Callback, Children}
 
 
@@ -15,23 +15,23 @@ import japgolly.scalajs.react.{Callback, Children}
   * the other methods expect it to produce a Future[S => S] for modState.
   */
 object AsyncStateFromProps {
-  def always[P, C <: Children, S, B](compute: (P, S) => Future[S => S])
+  def always[P, C <: Children, S, B](compute: (StateRW[P, S, B], P) => Future[S => S])
                                     (implicit executionContext: ExecutionContext): Config[P, C, S, B] =
     apply[P, C, S, B]((_, _) => true, compute)
-  def const[P, C <: Children, S, B](predicate: (P, P) => Boolean, compute: (P, S) => Future[S])
-                                   (implicit executionContext: ExecutionContext): Config[P, C, S, B] =
-    apply[P, C, S, B](predicate, compute(_, _).map(Function.const(_)))
-  def constAlways[P, C <: Children, S, B](compute: (P, S) => Future[S])
-                                         (implicit executionContext: ExecutionContext): Config[P, C, S, B] =
-    apply[P, C, S, B]((_, _) => true, compute(_, _).map(Function.const(_)))
-  def apply[P, C <: Children, S, B](predicate: (P, P) => Boolean, compute: (P, S) => Future[S => S])
+  def apply[P, C <: Children, S, B](predicate: (P, P) => Boolean, compute: (StateRW[P, S, B], P) => Future[S => S])
                                    (implicit executionContext: ExecutionContext): Config[P, C, S, B] = { builder =>
-    val run: (P, Lifecycle.StateRW[P, S, B]) => Callback =
-      (props, self) => Callback.future(compute(props, self.state).map(self.modState(_)))
+    val run: (P, StateRW[P, S, B]) => Callback =
+      (props, self) => Callback.future(compute(self, props).map(self.modState(_)))
     builder
       .componentDidMount(self => run(self.props, self))
       .componentWillReceiveProps { self =>
         Callback.when(predicate(self.currentProps, self.nextProps))(run(self.nextProps, self))
       }
   }
+  def const[P, C <: Children, S, B](predicate: (P, P) => Boolean, compute: (StateRW[P, S, B], P) => Future[S])
+                                   (implicit executionContext: ExecutionContext): Config[P, C, S, B] =
+    apply[P, C, S, B](predicate, compute(_, _).map(Function.const(_)))
+  def constAlways[P, C <: Children, S, B](compute: (StateRW[P, S, B], P) => Future[S])
+                                         (implicit executionContext: ExecutionContext): Config[P, C, S, B] =
+    apply[P, C, S, B]((_, _) => true, compute(_, _).map(Function.const(_)))
 }
