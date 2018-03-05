@@ -9,7 +9,7 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 
 
-class FutureView extends HasSpinnerImage {
+abstract class FutureView extends HasBusyIndicator {
   val defaultOnFailure: Throwable => VdomElement = { throwable =>
     throwable.printStackTrace()
     <.em(^.cls := "text-muted", "Loading failed")
