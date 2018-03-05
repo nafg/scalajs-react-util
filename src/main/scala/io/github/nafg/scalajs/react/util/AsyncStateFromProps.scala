@@ -18,6 +18,12 @@ object AsyncStateFromProps {
   def always[P, C <: Children, S, B](compute: (StateRW[P, S, B], P) => Future[S => S])
                                     (implicit executionContext: ExecutionContext): Config[P, C, S, B] =
     apply[P, C, S, B]((_, _) => true, compute)
+  def const[P, C <: Children, S, B](predicate: (P, P) => Boolean, compute: (StateRW[P, S, B], P) => Future[S])
+                                   (implicit executionContext: ExecutionContext): Config[P, C, S, B] =
+    apply[P, C, S, B](predicate, compute(_, _).map(Function.const(_)))
+  def constAlways[P, C <: Children, S, B](compute: (StateRW[P, S, B], P) => Future[S])
+                                         (implicit executionContext: ExecutionContext): Config[P, C, S, B] =
+    apply[P, C, S, B]((_, _) => true, compute(_, _).map(Function.const(_)))
   def apply[P, C <: Children, S, B](predicate: (P, P) => Boolean, compute: (StateRW[P, S, B], P) => Future[S => S])
                                    (implicit executionContext: ExecutionContext): Config[P, C, S, B] = { builder =>
     val run: (P, StateRW[P, S, B]) => Callback =
@@ -28,10 +34,4 @@ object AsyncStateFromProps {
         Callback.when(predicate(self.currentProps, self.nextProps))(run(self.nextProps, self))
       }
   }
-  def const[P, C <: Children, S, B](predicate: (P, P) => Boolean, compute: (StateRW[P, S, B], P) => Future[S])
-                                   (implicit executionContext: ExecutionContext): Config[P, C, S, B] =
-    apply[P, C, S, B](predicate, compute(_, _).map(Function.const(_)))
-  def constAlways[P, C <: Children, S, B](compute: (StateRW[P, S, B], P) => Future[S])
-                                         (implicit executionContext: ExecutionContext): Config[P, C, S, B] =
-    apply[P, C, S, B]((_, _) => true, compute(_, _).map(Function.const(_)))
 }
