@@ -21,7 +21,7 @@ abstract class GlobalBusyIndicator extends HasBusyIndicator {
 
   object Implicits {
     implicit class FutureBusyIndicatorExtensionMethods[A](self: Future[A]) {
-      def showBusy: self.type = GlobalBusyIndicator.this.showBusy(self)
+      def showBusy: Future[A] = GlobalBusyIndicator.this.showBusy(self)
     }
   }
 
