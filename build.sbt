@@ -1,8 +1,24 @@
 name := "scalajs-react-util"
 
-enablePlugins(ScalaJSBundlerPlugin)
+ThisBuild / scalaVersion := "2.12.6"
+ThisBuild / organization := "io.github.nafg.scalajs-react-util"
 
-scalaVersion := "2.12.6"
-organization := "io.github.nafg.scalajs-react-util"
-moduleName := "core"
-libraryDependencies += "com.github.japgolly.scalajs-react" %%% "extra" % "1.3.1"
+def addScalajsReactModule(name: String) = libraryDependencies += "com.github.japgolly.scalajs-react" %%% name % "1.3.1"
+
+publish / skip := true
+
+lazy val core =
+  project
+    .enablePlugins(ScalaJSBundlerPlugin)
+    .settings(
+      moduleName := "core",
+      addScalajsReactModule("extra")
+    )
+
+lazy val editor =
+  project
+    .enablePlugins(ScalaJSBundlerPlugin)
+    .dependsOn(core)
+    .settings(
+      addScalajsReactModule("ext-monocle-cats"),
+    )
