@@ -3,7 +3,7 @@ name := "scalajs-react-util"
 ThisBuild / scalaVersion := "2.12.6"
 ThisBuild / organization := "io.github.nafg.scalajs-react-util"
 
-def addScalajsReactModule(name: String) = libraryDependencies += "com.github.japgolly.scalajs-react" %%% name % "1.3.1"
+def addScalajsReactModule(name: String) = libraryDependencies += "com.github.japgolly.scalajs-react" %%% name % "1.4.0"
 
 publish / skip := true
 
