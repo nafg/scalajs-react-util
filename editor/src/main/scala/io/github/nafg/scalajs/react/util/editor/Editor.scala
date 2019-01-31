@@ -32,7 +32,7 @@ class Editor[A](fieldConstructor: FieldConstructor)(implicit format: Format[A], 
     ScalaComponent.builder[Props](name.value)
       .initialStateFromProps(props => mkState(props.snapshot.value))
       .render { self =>
-        val tagMods = self.props.tagMod(^.onBlur --> self.modState(canonicalize(_)))
+        val tagMods = TagMod(self.props.tagMod, ^.onBlur --> self.modState(canonicalize _))
         fieldConstructor.render(self.state, tagMods) { text =>
           val newState = Editor.State(text, format.parse(text))
           self.setState(newState) >>

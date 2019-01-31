@@ -76,7 +76,7 @@ class Messages {
       .configure(Listenable.listen(_ => broadcaster, { self =>
         (msg: Message) =>
           self.modState(messages => msg +: messages) >>
-            self.modState(messages => messages.filter(_ ne msg)).delayMs(msg.timeout).void
+            self.modState(messages => messages.filter(_ ne msg)).delayMs(msg.timeout).void.toCallback
       }))
       .build
 }
