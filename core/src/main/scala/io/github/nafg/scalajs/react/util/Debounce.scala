@@ -28,8 +28,18 @@ object Debounce {
     impl
   }
 
-  def callback[A](duration: FiniteDuration = DefaultDuration)(f: A => Callback): A => Callback =
-    apply[A](duration)(f.andThen(_.runNow())).andThen(_ => Callback.empty)
+  def callback[A](duration: FiniteDuration = DefaultDuration)(f: A => Callback): A => Callback = {
+    var timeout = Option.empty[SetTimeoutHandle]
+
+    a =>
+      Callback {
+        timeout.foreach(timers.clearTimeout)
+        timeout = Some(timers.setTimeout(duration) {
+          timeout = None
+          f(a).runNow()
+        })
+      }
+  }
 
   def future[A, B](duration: FiniteDuration = DefaultDuration)(f: A => Future[B])
                   (implicit executionContext: ExecutionContext): A => Future[B] = {
