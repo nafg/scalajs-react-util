@@ -39,11 +39,11 @@ class Editor[A](fieldConstructor: FieldConstructor)(implicit format: Format[A], 
             Callback.traverseOption(newState.validated.toOption)(v => handleValidChange((self, v)))
         }
       }
-      .componentWillReceiveProps { self =>
-        val nextValue = self.nextProps.snapshot.value
-        Callback.when(nextValue != self.currentProps.snapshot.value) {
+      .componentDidUpdate { self =>
+        val newValue = self.currentProps.snapshot.value
+        Callback.when(newValue != self.prevProps.snapshot.value) {
           self.modState { state =>
-            if (state.validated.exists(_ == nextValue)) state else mkState(nextValue)
+            if (state.validated.exists(_ == newValue)) state else mkState(newValue)
           }
         }
       }

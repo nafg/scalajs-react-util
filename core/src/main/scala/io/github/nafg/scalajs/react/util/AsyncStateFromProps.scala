@@ -3,7 +3,7 @@ package io.github.nafg.scalajs.react.util
 import scala.concurrent.{ExecutionContext, Future}
 
 import japgolly.scalajs.react.component.builder.Builder.{Config, Step4}
-import japgolly.scalajs.react.component.builder.Lifecycle.StateRW
+import japgolly.scalajs.react.component.builder.Lifecycle.StateW
 import japgolly.scalajs.react.{Callback, Children, UpdateSnapshot}
 
 
@@ -15,49 +15,42 @@ import japgolly.scalajs.react.{Callback, Children, UpdateSnapshot}
   * the other methods expect it to produce a Future[S => S] for modState.
   */
 object AsyncStateFromProps {
-  def always[P, C <: Children, S, B, US <: UpdateSnapshot](compute: (StateRW[P, S, B], P) => Future[S => S])
-                                                          (implicit executionContext: ExecutionContext): Config[P, C, S, B, US, US] =
-    apply[P, C, S, B, US]((_, _) => true, compute)
-  def const[P, C <: Children, S, B, US <: UpdateSnapshot](predicate: (P, P) => Boolean, compute: (StateRW[P, S, B], P) => Future[S])
-                                                         (implicit executionContext: ExecutionContext): Config[P, C, S, B, US, US] =
+  def always[P, C <: Children, S, B, US <: UpdateSnapshot](compute: (StateW[P, S, B], P) => Future[S => S])
+                                                          (implicit executionContext: ExecutionContext) =
+    apply[P, C, S, B, US](_ != _, compute)
+  def const[P, C <: Children, S, B, US <: UpdateSnapshot](predicate: (P, P) => Boolean, compute: (StateW[P, S, B], P) => Future[S])
+                                                         (implicit executionContext: ExecutionContext) =
     apply[P, C, S, B, US](predicate, compute(_, _).map(Function.const(_)))
-  def constAlways[P, C <: Children, S, B, US <: UpdateSnapshot](compute: (StateRW[P, S, B], P) => Future[S])
-                                                               (implicit executionContext: ExecutionContext): Config[P, C, S, B, US, US] =
-    apply[P, C, S, B, US]((_, _) => true, compute(_, _).map(Function.const(_)))
-  def apply[P, C <: Children, S, B, US <: UpdateSnapshot](predicate: (P, P) => Boolean, compute: (StateRW[P, S, B], P) => Future[S => S])
-                                                         (implicit executionContext: ExecutionContext): Config[P, C, S, B, US, US] = { builder =>
-    val run: (P, StateRW[P, S, B]) => Callback =
-      (props, self) => Callback.future(compute(self, props).map(self.modState))
-    builder
-      .componentDidMount(self => run(self.props, self))
-      .componentWillReceiveProps { self =>
-        Callback.when(predicate(self.currentProps, self.nextProps))(run(self.nextProps, self))
-      }
-  }
+  def constAlways[P, C <: Children, S, B, US <: UpdateSnapshot](compute: (StateW[P, S, B], P) => Future[S])
+                                                               (implicit executionContext: ExecutionContext) =
+    apply[P, C, S, B, US](_ != _, compute(_, _).map(Function.const(_)))
+  def apply[P, C <: Children, S, B, US <: UpdateSnapshot](predicate: (P, P) => Boolean, compute: (StateW[P, S, B], P) => Future[S => S])
+                                                         (implicit ec: ExecutionContext): Config[P, C, S, B, US, UpdateSnapshot.Some[US#Value]] =
+    _.asyncStateFromProps(predicate, compute)
 
   implicit class ext[P, C <: Children, S, B, US <: UpdateSnapshot](self: Step4[P, C, S, B, US]) {
     object asyncStateFromProps {
-      def apply(predicate: (P, P) => Boolean, compute: (StateRW[P, S, B], P) => Future[S => S])
-               (implicit executionContext: ExecutionContext): Step4[P, C, S, B, US] = {
-        val run: (P, StateRW[P, S, B]) => Callback =
+      def apply(predicate: (P, P) => Boolean, compute: (StateW[P, S, B], P) => Future[S => S])
+               (implicit executionContext: ExecutionContext): Step4[P, C, S, B, UpdateSnapshot.Some[US#Value]] = {
+        val run: (P, StateW[P, S, B]) => Callback =
           (props, self) => Callback.future(compute(self, props).map(self.modState))
         self
           .componentDidMount(self => run(self.props, self))
-          .componentWillReceiveProps { self =>
-            Callback.when(predicate(self.currentProps, self.nextProps))(run(self.nextProps, self))
+          .componentDidUpdate { self =>
+            Callback.when(predicate(self.prevProps, self.currentProps))(run(self.currentProps, self))
           }
       }
 
-      def always(compute: (StateRW[P, S, B], P) => Future[S => S])
-                (implicit executionContext: ExecutionContext): Step4[P, C, S, B, US] = apply((_, _) => true, compute)
+      def always(compute: (StateW[P, S, B], P) => Future[S => S])
+                (implicit executionContext: ExecutionContext) = apply(_ != _, compute)
 
-      def const(predicate: (P, P) => Boolean, compute: (StateRW[P, S, B], P) => Future[S])
-               (implicit executionContext: ExecutionContext): Step4[P, C, S, B, US] =
+      def const(predicate: (P, P) => Boolean, compute: (StateW[P, S, B], P) => Future[S])
+               (implicit executionContext: ExecutionContext) =
         apply(predicate, compute(_, _).map(Function.const(_)))
 
-      def constAlways(compute: (StateRW[P, S, B], P) => Future[S])
-                     (implicit executionContext: ExecutionContext): Step4[P, C, S, B, US] =
-        apply((_, _) => true, compute(_, _).map(Function.const(_)))
+      def constAlways(compute: (StateW[P, S, B], P) => Future[S])
+                     (implicit executionContext: ExecutionContext) =
+        apply(_ != _, compute(_, _).map(Function.const(_)))
     }
   }
 }
