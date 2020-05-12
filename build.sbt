@@ -1,9 +1,12 @@
 name := "scalajs-react-util"
 
-ThisBuild / crossScalaVersions := Seq("2.12.8", "2.13.0")
+ThisBuild / organization := "io.github.nafg.scalajs-react-util"
+
+ThisBuild / crossScalaVersions := Seq("2.12.11", "2.13.2")
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.last
 
-ThisBuild / organization := "io.github.nafg.scalajs-react-util"
+ThisBuild / scalacOptions += "-deprecation"
+
 
 def addScalajsReactModule(name: String) = libraryDependencies += "com.github.japgolly.scalajs-react" %%% name % "1.7.0"
 
