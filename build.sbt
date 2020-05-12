@@ -7,6 +7,7 @@ ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.last
 
 ThisBuild / scalacOptions += "-deprecation"
 
+def sjsCrossTarget = crossTarget ~= (new File(_, "sjs" + scalaJSVersion))
 
 def addScalajsReactModule(name: String) = libraryDependencies += "com.github.japgolly.scalajs-react" %%% name % "1.7.0"
 
@@ -17,6 +18,7 @@ lazy val core =
     .enablePlugins(ScalaJSBundlerPlugin)
     .settings(
       moduleName := "core",
+      sjsCrossTarget,
       addScalajsReactModule("extra")
     )
 
@@ -25,5 +27,6 @@ lazy val editor =
     .enablePlugins(ScalaJSBundlerPlugin)
     .dependsOn(core)
     .settings(
-      addScalajsReactModule("ext-monocle-cats"),
+      sjsCrossTarget,
+      addScalajsReactModule("ext-monocle-cats")
     )
