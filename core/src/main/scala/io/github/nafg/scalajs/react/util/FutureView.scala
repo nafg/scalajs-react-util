@@ -5,19 +5,18 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.util.{Failure, Success}
 
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^._
 
 
 abstract class FutureView extends HasBusyIndicator {
-  val defaultOnFailure: Throwable => VdomElement = { throwable =>
+  val defaultOnFailure: Throwable => VdomNode = { throwable =>
     throwable.printStackTrace()
     <.em(^.cls := "text-muted", "Loading failed")
   }
 
-  case class Props(future: Future[VdomElement],
-                   loading: () => VdomElement = () => busyIndicator,
-                   onFailure: Throwable => VdomElement = defaultOnFailure)
+  case class Props(future: Future[VdomNode],
+                   loading: () => VdomNode = () => busyIndicator,
+                   onFailure: Throwable => VdomNode = defaultOnFailure)
 
   val component =
     ScalaComponent.builder[Props]("FutureView")
@@ -32,10 +31,10 @@ abstract class FutureView extends HasBusyIndicator {
       .configure(AsyncStateFromProps.constAlways((_, props) => props.future.transform(attempt => Success(Some(attempt)))))
       .build
 
-  def apply(fut: Future[VdomElement]) = component(Props(fut))
+  def apply(fut: Future[VdomNode]) = component(Props(fut))
 
-  def custom(loader: => VdomElement = busyIndicator, onFailure: Throwable => VdomElement = defaultOnFailure)
-            (fut: Future[VdomElement]) =
+  def custom(loader: => VdomNode = busyIndicator, onFailure: Throwable => VdomNode = defaultOnFailure)
+            (fut: Future[VdomNode]) =
     component(Props(fut, loading = () => loader, onFailure = onFailure))
 }
 
