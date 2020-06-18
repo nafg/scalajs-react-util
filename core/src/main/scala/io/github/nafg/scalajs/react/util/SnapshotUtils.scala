@@ -2,6 +2,7 @@ package io.github.nafg.scalajs.react.util
 
 import scala.concurrent.{ExecutionContext, Future}
 
+import org.scalajs.dom.html
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{Callback, CallbackOption, CallbackTo, ReactEventFromInput}
@@ -24,26 +25,31 @@ object SnapshotUtils {
       }
   }
 
-  implicit class BooleanSnapshotExtensionMethods(self: StateSnapshot[Boolean]) {
+  trait HasToTagMod[A] extends Any {
+    protected def snapshot: StateSnapshot[A]
+    protected def setAttr: A => TagMod
+    protected def property: html.Input => A
+
     def toTagMod =
       TagMod(
-        ^.checked := self.value,
+        setAttr(snapshot.value),
         ^.onChange ==> { event: ReactEventFromInput =>
-          val checked = event.target.checked
-          self.setState(checked)
+          val value = property(event.target)
+          snapshot.setState(value)
         }
       )
   }
 
-  implicit class StringSnapshotExtensionMethods(self: StateSnapshot[String]) {
-    def toTagMod =
-      TagMod(
-        ^.value := self.value,
-        ^.onChange ==> { event: ReactEventFromInput =>
-          val value = event.target.value
-          self.setState(value)
-        }
-      )
+  implicit class StringSnapshotExtensionMethods(override protected val snapshot: StateSnapshot[String])
+    extends AnyVal with HasToTagMod[String] {
+    override protected def setAttr = ^.value := _
+    override protected def property = _.value
+  }
+
+  implicit class BooleanSnapshotExtensionMethods(override protected val snapshot: StateSnapshot[Boolean])
+    extends AnyVal with HasToTagMod[Boolean] {
+    override protected def setAttr = ^.checked := _
+    override protected def property = _.checked
   }
 
   implicit class OptionSnapshotExtensionMethods[A](self: StateSnapshot[Option[A]]) {
