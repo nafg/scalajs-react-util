@@ -36,7 +36,7 @@ abstract class FutureView extends HasBusyIndicator {
 
   def custom(loader: => VdomElement = busyIndicator, onFailure: Throwable => VdomElement = defaultOnFailure)
             (fut: Future[VdomElement]) =
-    component(Props(fut, loading = () => loader))
+    component(Props(fut, loading = () => loader, onFailure = onFailure))
 }
 
 object FutureView extends FutureView with HasSpinnerImage
