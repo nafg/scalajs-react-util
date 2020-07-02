@@ -7,6 +7,7 @@ import scala.util.{Failure, Success, Try}
 import japgolly.scalajs.react.component.Scala.Component
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{Callback, CallbackTo, CtorType, ScalaComponent}
+import io.github.nafg.scalajs.react.util.AsyncStateFromProps.ext
 
 
 object FutureValueViewImpl {
@@ -37,8 +38,9 @@ abstract class FutureValueViewLike extends HasBusyIndicator {
   )
 
   protected type State
+  protected type Backend
 
-  def component: Component[FutureValueViewImpl.Props[F[VdomNode]], State, Unit, CtorType.Props]
+  def component: Component[FutureValueViewImpl.Props[F[VdomNode]], State, Backend, CtorType.Props]
 
   def apply[A](content: F[A])(implicit f: A => VdomNode) =
     component(FutureValueViewImpl.Props(map(f)(content), defaultSettings))
@@ -54,6 +56,7 @@ abstract class FutureValueView extends FutureValueViewLike {
   override type F[A] = Option[Try[A]]
   override protected def map[A, B](f: A => B) = _.map(_.map(f))
   override protected type State = Unit
+  override protected type Backend = Unit
   override def component = FutureValueViewImpl.component
 }
 
@@ -63,11 +66,13 @@ abstract class FutureView extends FutureValueViewLike {
   override type F[A] = Future[A]
   override protected def map[A, B](f: A => B) = _.map(f)
   override protected type State = Option[Try[VdomNode]]
+  override protected type Backend = IsUnmounted.Backend
   val component =
     ScalaComponent.builder[FutureValueViewImpl.Props[Future[VdomNode]]]
       .initialStateFromProps(_.content.value)
+      .backend(_ => new IsUnmounted.Backend)
       .render(self => FutureValueViewImpl.component(FutureValueViewImpl.Props(self.state, self.props.settings)))
-      .configure(AsyncStateFromProps.constAlways((p, _, _) => p.content.transform(attempt => Success(Some(attempt)))))
+      .asyncStateFromProps.constAlways((p, _, _) => p.content.transform(attempt => Success(Some(attempt))))
       .build
 }
 
