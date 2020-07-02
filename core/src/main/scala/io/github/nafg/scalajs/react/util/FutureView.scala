@@ -2,42 +2,73 @@ package io.github.nafg.scalajs.react.util
 
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
-import japgolly.scalajs.react._
+import japgolly.scalajs.react.component.Scala.Component
 import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.{Callback, CallbackTo, CtorType, ScalaComponent}
 
 
-abstract class FutureView extends HasBusyIndicator {
-  val defaultOnFailure: Throwable => VdomNode = { throwable =>
-    throwable.printStackTrace()
-    <.em(^.cls := "text-muted", "Loading failed")
-  }
-
-  case class Props(future: Future[VdomNode],
-                   loading: () => VdomNode = () => busyIndicator,
-                   onFailure: Throwable => VdomNode = defaultOnFailure)
+object FutureValueViewImpl {
+  case class Settings(renderLoading: () => VdomNode, onFailure: Throwable => CallbackTo[VdomNode])
+  case class Props[A](content: A, settings: Settings)
 
   val component =
-    ScalaComponent.builder[Props]("FutureView")
-      .initialStateFromProps(_.future.value)
-      .render { self =>
-        self.state match {
-          case None                     => self.props.loading()
-          case Some(Failure(throwable)) => self.props.onFailure(throwable)
-          case Some(Success(elem))      => elem
-        }
+    ScalaComponent.builder[Props[Option[Try[VdomNode]]]]
+      .render_P {
+        case Props(None, settings)                     => settings.renderLoading()
+        case Props(Some(Success(elem)), _)             => elem
+        case Props(Some(Failure(throwable)), settings) => settings.onFailure(throwable).runNow()
       }
-      .configure(
-        AsyncStateFromProps.constAlways((props, _, _) => props.future.transform(attempt => Success(Some(attempt))))
-      )
       .build
+}
 
-  def apply(fut: Future[VdomNode]) = component(Props(fut))
+abstract class FutureValueViewLike extends HasBusyIndicator {
+  type F[_]
 
-  def custom(loader: => VdomNode = busyIndicator, onFailure: Throwable => VdomNode = defaultOnFailure)
-            (fut: Future[VdomNode]) =
-    component(Props(fut, loading = () => loader, onFailure = onFailure))
+  protected def map[A, B](f: A => B): F[A] => F[B]
+
+  val defaultSettings = FutureValueViewImpl.Settings(
+    renderLoading = () => busyIndicator,
+    onFailure = { throwable =>
+      Callback(throwable.printStackTrace())
+        .map(_ => <.em(^.color.gray, "Loading failed"))
+    }
+  )
+
+  protected type State
+
+  def component: Component[FutureValueViewImpl.Props[F[VdomNode]], State, Unit, CtorType.Props]
+
+  def apply[A](content: F[A])(implicit f: A => VdomNode) =
+    component(FutureValueViewImpl.Props(map(f)(content), defaultSettings))
+
+  def custom[A](renderLoading: => VdomNode = defaultSettings.renderLoading(),
+                onFailure: Throwable => CallbackTo[VdomNode] = defaultSettings.onFailure)
+               (content: F[A])
+               (implicit f: A => VdomNode) =
+    component(FutureValueViewImpl.Props(map(f)(content), FutureValueViewImpl.Settings(() => renderLoading, onFailure)))
+}
+
+abstract class FutureValueView extends FutureValueViewLike {
+  override type F[A] = Option[Try[A]]
+  override protected def map[A, B](f: A => B) = _.map(_.map(f))
+  override protected type State = Unit
+  override def component = FutureValueViewImpl.component
+}
+
+object FutureValueView extends FutureValueView with HasSpinnerImage
+
+abstract class FutureView extends FutureValueViewLike {
+  override type F[A] = Future[A]
+  override protected def map[A, B](f: A => B) = _.map(f)
+  override protected type State = Option[Try[VdomNode]]
+  val component =
+    ScalaComponent.builder[FutureValueViewImpl.Props[Future[VdomNode]]]
+      .initialStateFromProps(_.content.value)
+      .render(self => FutureValueViewImpl.component(FutureValueViewImpl.Props(self.state, self.props.settings)))
+      .configure(AsyncStateFromProps.constAlways((p, _, _) => p.content.transform(attempt => Success(Some(attempt)))))
+      .build
 }
 
 object FutureView extends FutureView with HasSpinnerImage
