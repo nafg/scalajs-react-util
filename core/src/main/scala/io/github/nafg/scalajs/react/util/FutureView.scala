@@ -28,7 +28,9 @@ abstract class FutureView extends HasBusyIndicator {
           case Some(Success(elem))      => elem
         }
       }
-      .configure(AsyncStateFromProps.constAlways((_, props) => props.future.transform(attempt => Success(Some(attempt)))))
+      .configure(
+        AsyncStateFromProps.constAlways((props, _, _) => props.future.transform(attempt => Success(Some(attempt))))
+      )
       .build
 
   def apply(fut: Future[VdomNode]) = component(Props(fut))

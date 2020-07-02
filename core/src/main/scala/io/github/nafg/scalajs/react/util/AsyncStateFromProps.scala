@@ -15,42 +15,46 @@ import japgolly.scalajs.react.{Callback, Children, UpdateSnapshot}
   * the other methods expect it to produce a Future[S => S] for modState.
   */
 object AsyncStateFromProps {
-  def always[P, C <: Children, S, B, US <: UpdateSnapshot](compute: (StateW[P, S, B], P) => Future[S => S])
+  private def fnConst[S]: S => S => S = s => _ => s
+
+  def always[P, C <: Children, S, B, US <: UpdateSnapshot](compute: (P, S, B) => Future[S => S])
                                                           (implicit executionContext: ExecutionContext) =
     apply[P, C, S, B, US](_ != _, compute)
-  def const[P, C <: Children, S, B, US <: UpdateSnapshot](predicate: (P, P) => Boolean, compute: (StateW[P, S, B], P) => Future[S])
+  def const[P, C <: Children, S, B, US <: UpdateSnapshot](predicate: (P, P) => Boolean, compute: (P, S, B) => Future[S])
                                                          (implicit executionContext: ExecutionContext) =
-    apply[P, C, S, B, US](predicate, compute(_, _).map(Function.const(_)))
-  def constAlways[P, C <: Children, S, B, US <: UpdateSnapshot](compute: (StateW[P, S, B], P) => Future[S])
+    apply[P, C, S, B, US](predicate, compute(_, _, _).map(fnConst))
+  def constAlways[P, C <: Children, S, B, US <: UpdateSnapshot](compute: (P, S, B) => Future[S])
                                                                (implicit executionContext: ExecutionContext) =
-    apply[P, C, S, B, US](_ != _, compute(_, _).map(Function.const(_)))
-  def apply[P, C <: Children, S, B, US <: UpdateSnapshot](predicate: (P, P) => Boolean, compute: (StateW[P, S, B], P) => Future[S => S])
-                                                         (implicit ec: ExecutionContext): Config[P, C, S, B, US, UpdateSnapshot.Some[US#Value]] =
+    apply[P, C, S, B, US](_ != _, compute(_, _, _).map(fnConst))
+  def apply[P, C <: Children, S, B, US <: UpdateSnapshot](predicate: (P, P) => Boolean,
+                                                          compute: (P, S, B) => Future[S => S])
+                                                         (implicit ec: ExecutionContext
+                                                         ): Config[P, C, S, B, US, UpdateSnapshot.Some[US#Value]] =
     _.asyncStateFromProps(predicate, compute)
 
   implicit class ext[P, C <: Children, S, B, US <: UpdateSnapshot](self: Step4[P, C, S, B, US]) {
     object asyncStateFromProps {
-      def apply(predicate: (P, P) => Boolean, compute: (StateW[P, S, B], P) => Future[S => S])
+      def apply(predicate: (P, P) => Boolean, compute: (P, S, B) => Future[S => S])
                (implicit executionContext: ExecutionContext): Step4[P, C, S, B, UpdateSnapshot.Some[US#Value]] = {
-        val run: (P, StateW[P, S, B]) => Callback =
-          (props, self) => Callback.future(compute(self, props).map(self.modState))
+        val run: (P, S, StateW[P, S, B]) => Callback =
+          (props, state, self) => Callback.future(compute(props, state, self.backend).map(self.modState))
         self
-          .componentDidMount(self => run(self.props, self))
+          .componentDidMount(self => run(self.props, self.state, self))
           .componentDidUpdate { self =>
-            Callback.when(predicate(self.prevProps, self.currentProps))(run(self.currentProps, self))
+            Callback.when(predicate(self.prevProps, self.currentProps))(run(self.currentProps, self.currentState, self))
           }
       }
 
-      def always(compute: (StateW[P, S, B], P) => Future[S => S])
+      def always(compute: (P, S, B) => Future[S => S])
                 (implicit executionContext: ExecutionContext) = apply(_ != _, compute)
 
-      def const(predicate: (P, P) => Boolean, compute: (StateW[P, S, B], P) => Future[S])
+      def const(predicate: (P, P) => Boolean, compute: (P, S, B) => Future[S])
                (implicit executionContext: ExecutionContext) =
-        apply(predicate, compute(_, _).map(Function.const(_)))
+        apply(predicate, compute(_, _, _).map(fnConst))
 
-      def constAlways(compute: (StateW[P, S, B], P) => Future[S])
+      def constAlways(compute: (P, S, B) => Future[S])
                      (implicit executionContext: ExecutionContext) =
-        apply(_ != _, compute(_, _).map(Function.const(_)))
+        apply(_ != _, compute(_, _, _).map(fnConst))
     }
   }
 }
