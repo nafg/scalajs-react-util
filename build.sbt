@@ -5,7 +5,24 @@ ThisBuild / organization := "io.github.nafg.scalajs-react-util"
 ThisBuild / crossScalaVersions := Seq("2.12.11", "2.13.2")
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.last
 
-ThisBuild / scalacOptions += "-deprecation"
+ThisBuild / scalacOptions ++= Seq(
+  "-deprecation",
+  "-feature",
+  "-unchecked",
+  "-explaintypes",
+  "-Xlint:_",
+  "-Ywarn-dead-code",
+  "-Ywarn-extra-implicit",
+  "-Ywarn-numeric-widen",
+  "-Ywarn-unused:_",
+  "-Ywarn-value-discard"
+)
+
+ThisBuild / scalacOptions ++=
+  (if (scalaVersion.value.startsWith("2.12."))
+    List("-language:higherKinds", "-Xfuture", "-Ypartial-unification")
+  else
+    Nil)
 
 def sjsCrossTarget = crossTarget ~= (new File(_, "sjs" + scalaJSVersion))
 
