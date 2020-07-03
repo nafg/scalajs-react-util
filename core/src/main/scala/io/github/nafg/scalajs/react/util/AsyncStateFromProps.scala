@@ -19,19 +19,19 @@ object AsyncStateFromProps {
   private def fnConst[S]: S => S => S = s => _ => s
 
   def always[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](compute: (P, S, B) => Future[S => S]) =
-    apply[P, C, S, B, US](_ != _, compute)
-  def const[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](predicate: (P, P) => Boolean,
-                                                                         compute: (P, S, B) => Future[S]) =
-    apply[P, C, S, B, US](predicate, compute(_, _, _).map(fnConst))
+    apply[P, C, S, B, US](_ != _)(compute)
+  def const[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](predicate: (P, P) => Boolean)
+                                                                        (compute: (P, S, B) => Future[S]) =
+    apply[P, C, S, B, US](predicate)(compute(_, _, _).map(fnConst))
   def constAlways[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](compute: (P, S, B) => Future[S]) =
-    apply[P, C, S, B, US](_ != _, compute(_, _, _).map(fnConst))
-  def apply[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](predicate: (P, P) => Boolean,
-                                                                         compute: (P, S, B) => Future[S => S]) =
-    (self: Step4[P, C, S, B, US]) => ext(self).asyncStateFromProps(predicate, compute)
+    apply[P, C, S, B, US](_ != _)(compute(_, _, _).map(fnConst))
+  def apply[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](predicate: (P, P) => Boolean)
+                                                                        (compute: (P, S, B) => Future[S => S]) =
+    (self: Step4[P, C, S, B, US]) => ext(self).asyncStateFromProps(predicate)(compute)
 
   implicit class ext[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](self: Step4[P, C, S, B, US]) {
     object asyncStateFromProps {
-      def apply(predicate: (P, P) => Boolean, compute: (P, S, B) => Future[S => S]) = {
+      def apply(predicate: (P, P) => Boolean)(compute: (P, S, B) => Future[S => S]) = {
         val run: (P, S, StateW[P, S, B]) => Callback = { (props, state, self) =>
           Callback.future(compute(props, state, self.backend)
             .map(f => Callback.unless(self.backend.isUnmounted)(self.modState(f))))
@@ -44,13 +44,13 @@ object AsyncStateFromProps {
           .configure(IsUnmounted.install)
       }
 
-      def always(compute: (P, S, B) => Future[S => S]) = apply(_ != _, compute)
+      def always(compute: (P, S, B) => Future[S => S]) = apply(_ != _)(compute)
 
-      def const(predicate: (P, P) => Boolean, compute: (P, S, B) => Future[S]) =
-        apply(predicate, compute(_, _, _).map(fnConst))
+      def const(predicate: (P, P) => Boolean)(compute: (P, S, B) => Future[S]) =
+        apply(predicate)(compute(_, _, _).map(fnConst))
 
       def constAlways(compute: (P, S, B) => Future[S]) =
-        apply(_ != _, compute(_, _, _).map(fnConst))
+        apply(_ != _)(compute(_, _, _).map(fnConst))
     }
   }
 }
