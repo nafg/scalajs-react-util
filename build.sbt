@@ -47,3 +47,14 @@ lazy val editor =
       sjsCrossTarget,
       addScalajsReactModule("ext-monocle-cats")
     )
+
+lazy val `partial-renderer` =
+  project
+    .enablePlugins(ScalaJSBundlerPlugin)
+    .dependsOn(core)
+    .settings(
+      sjsCrossTarget,
+      libraryDependencies += "com.github.julien-truffaut" %%% "monocle-macro" % "2.0.5",
+      libraryDependencies += "org.scalameta" %%% "munit" % "0.7.16" % Test,
+      testFrameworks += new TestFramework("munit.Framework")
+    )
