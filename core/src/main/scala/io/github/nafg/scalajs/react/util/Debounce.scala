@@ -48,7 +48,7 @@ object Debounce {
 
     def impl(a: A): Future[B] = {
       invocationNum += 1
-      val promise = Promise[B]
+      val promise = Promise[B]()
 
       def run(): Unit = {
         timeout = None
