@@ -26,7 +26,7 @@ ThisBuild / scalacOptions ++=
 
 def sjsCrossTarget = crossTarget ~= (new File(_, "sjs" + scalaJSVersion))
 
-def addScalajsReactModule(name: String) = libraryDependencies += "com.github.japgolly.scalajs-react" %%% name % "1.7.6"
+def addScalajsReactModule(name: String) = libraryDependencies += "com.github.japgolly.scalajs-react" %%% name % "1.7.7"
 
 publish / skip := true
 
