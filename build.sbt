@@ -55,6 +55,6 @@ lazy val `partial-renderer` =
     .settings(
       sjsCrossTarget,
       libraryDependencies += "com.github.julien-truffaut" %%% "monocle-macro" % "2.0.5",
-      libraryDependencies += "org.scalameta" %%% "munit" % "0.7.16" % Test,
+      libraryDependencies += "org.scalameta" %%% "munit" % "0.7.20" % Test,
       testFrameworks += new TestFramework("munit.Framework")
     )
