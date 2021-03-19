@@ -2,7 +2,7 @@ name := "scalajs-react-util"
 
 ThisBuild / organization := "io.github.nafg.scalajs-react-util"
 
-ThisBuild / crossScalaVersions := Seq("2.12.12", "2.13.4")
+ThisBuild / crossScalaVersions := Seq("2.12.13", "2.13.4")
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.last
 
 ThisBuild / scalacOptions ++= Seq(
@@ -26,7 +26,7 @@ ThisBuild / scalacOptions ++=
 
 def sjsCrossTarget = crossTarget ~= (new File(_, "sjs" + scalaJSVersion))
 
-def addScalajsReactModule(name: String) = libraryDependencies += "com.github.japgolly.scalajs-react" %%% name % "1.7.6"
+def addScalajsReactModule(name: String) = libraryDependencies += "com.github.japgolly.scalajs-react" %%% name % "1.7.7"
 
 publish / skip := true
 
