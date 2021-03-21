@@ -2,7 +2,7 @@ name := "scalajs-react-util"
 
 ThisBuild / organization := "io.github.nafg.scalajs-react-util"
 
-ThisBuild / crossScalaVersions := Seq("2.13.5", "2.13.4")
+ThisBuild / crossScalaVersions := Seq("2.12.13", "2.13.5")
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.last
 
 ThisBuild / scalacOptions ++= Seq(
@@ -54,7 +54,7 @@ lazy val `partial-renderer` =
     .dependsOn(core)
     .settings(
       sjsCrossTarget,
-      libraryDependencies += "com.github.julien-truffaut" %%% "monocle-macro" % "2.0.5",
-      libraryDependencies += "org.scalameta" %%% "munit" % "0.7.16" % Test,
+      libraryDependencies += "com.github.julien-truffaut" %%% "monocle-macro" % "2.1.0",
+      libraryDependencies += "org.scalameta" %%% "munit" % "0.7.22" % Test,
       testFrameworks += new TestFramework("munit.Framework")
     )
