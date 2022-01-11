@@ -5,7 +5,7 @@ import scala.util.{Failure, Success}
 
 import japgolly.scalajs.react.ScalaComponent
 import japgolly.scalajs.react.extra.{Broadcaster, Listenable, OnUnmount}
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 
 
 class Messages {
@@ -71,7 +71,7 @@ class Messages {
   val component =
     ScalaComponent.builder[Unit]("Messages")
       .initialState(Seq.empty[Message])
-      .backend(_ => new OnUnmount.Backend)
+      .backend(_ => OnUnmount())
       .render_S(render)
       .configure(Listenable.listen(_ => broadcaster, { self =>
         (msg: Message) =>

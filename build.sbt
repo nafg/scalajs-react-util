@@ -1,32 +1,37 @@
+import _root_.io.github.nafg.scalacoptions._
+
+
 name := "scalajs-react-util"
 
 ThisBuild / organization := "io.github.nafg.scalajs-react-util"
 
-ThisBuild / crossScalaVersions := Seq("2.12.15", "2.13.7")
+ThisBuild / crossScalaVersions := Seq("2.13.7", "3.0.2")
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.last
 
-ThisBuild / scalacOptions ++= Seq(
-  "-deprecation",
-  "-feature",
-  "-unchecked",
-  "-explaintypes",
-  "-Xlint:_",
-  "-Ywarn-dead-code",
-  "-Ywarn-extra-implicit",
-  "-Ywarn-numeric-widen",
-  "-Ywarn-unused:_",
-  "-Ywarn-value-discard"
-)
+def myScalacOptions(version: String) =
+  ScalacOptions.all(version)(
+    (opts: options.Common) =>
+      opts.deprecation ++
+        opts.unchecked ++
+        opts.feature,
+    (_: options.V2).explaintypes,
+    (_: options.V2_13).Xlint("_"),
+    (opts: options.V2_13_6_+) =>
+      opts.WdeadCode ++
+        opts.WextraImplicit ++
+        opts.WnumericWiden ++
+        opts.XlintUnused ++
+        opts.WvalueDiscard ++
+        opts.Xsource("3")
+  )
 
-ThisBuild / scalacOptions ++=
-  (if (scalaVersion.value.startsWith("2.12."))
-    List("-language:higherKinds", "-Xfuture", "-Ypartial-unification")
-  else
-    Nil)
+ThisBuild / scalacOptions ++= myScalacOptions(scalaVersion.value)
+
+ThisBuild / versionScheme := Some("early-semver")
 
 def sjsCrossTarget = crossTarget ~= (new File(_, "sjs" + scalaJSVersion))
 
-def addScalajsReactModule(name: String) = libraryDependencies += "com.github.japgolly.scalajs-react" %%% name % "1.7.7"
+def addScalajsReactModule(name: String) = libraryDependencies += "com.github.japgolly.scalajs-react" %%% name % "2.0.0"
 
 publish / skip := true
 
@@ -36,6 +41,7 @@ lazy val core =
     .settings(
       moduleName := "core",
       sjsCrossTarget,
+      addScalajsReactModule("core"),
       addScalajsReactModule("extra")
     )
 
@@ -45,7 +51,7 @@ lazy val editor =
     .dependsOn(core)
     .settings(
       sjsCrossTarget,
-      addScalajsReactModule("ext-monocle-cats")
+      addScalajsReactModule("extra-ext-monocle3")
     )
 
 lazy val `partial-renderer` =
@@ -54,7 +60,7 @@ lazy val `partial-renderer` =
     .dependsOn(core)
     .settings(
       sjsCrossTarget,
-      libraryDependencies += "com.github.julien-truffaut" %%% "monocle-macro" % "2.1.0",
+      libraryDependencies += "dev.optics" %%% "monocle-macro" % "3.1.0",
       libraryDependencies += "org.scalameta" %%% "munit" % "0.7.29" % Test,
       testFrameworks += new TestFramework("munit.Framework")
     )

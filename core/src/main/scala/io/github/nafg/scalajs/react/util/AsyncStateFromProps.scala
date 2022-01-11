@@ -3,8 +3,8 @@ package io.github.nafg.scalajs.react.util
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-import japgolly.scalajs.react.component.builder.Builder.Step4
-import japgolly.scalajs.react.component.builder.Lifecycle.StateW
+import japgolly.scalajs.react.component.builder.ComponentBuilder.LastStep
+import japgolly.scalajs.react.component.builder.Lifecycle.{Base, StateW}
 import japgolly.scalajs.react.{Callback, Children, UpdateSnapshot}
 
 
@@ -27,12 +27,12 @@ object AsyncStateFromProps {
     apply[P, C, S, B, US](_ != _)(compute(_, _, _).map(fnConst))
   def apply[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](predicate: (P, P) => Boolean)
                                                                         (compute: (P, S, B) => Future[S => S]) =
-    (self: Step4[P, C, S, B, US]) => ext(self).asyncStateFromProps(predicate)(compute)
+    (self: LastStep[P, C, S, B, US]) => ext(self).asyncStateFromProps(predicate)(compute)
 
-  implicit class ext[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](self: Step4[P, C, S, B, US]) {
+  implicit class ext[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](self: LastStep[P, C, S, B, US]) {
     object asyncStateFromProps {
       def apply(predicate: (P, P) => Boolean)(compute: (P, S, B) => Future[S => S]) = {
-        val run: (P, S, StateW[P, S, B]) => Callback = { (props, state, self) =>
+        val run: (P, S, Base[P, S, B] & StateW[P, S, B]) => Callback = { (props, state, self) =>
           Callback.future(compute(props, state, self.backend)
             .map(f => Callback.unless(self.backend.isUnmounted)(self.modState(f))))
         }

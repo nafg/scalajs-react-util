@@ -5,7 +5,7 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.util.{Failure, Success, Try}
 
 import japgolly.scalajs.react.component.Scala.Component
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.{Callback, CallbackTo, CtorType, ScalaComponent}
 import io.github.nafg.scalajs.react.util.AsyncStateFromProps.ext
 
@@ -16,6 +16,8 @@ object FutureValueViewImpl {
 
   val component =
     ScalaComponent.builder[Props[Option[Try[VdomNode]]]]
+      .stateless
+      .noBackend
       .render_P {
         case Props(None, settings)                     => settings.renderLoading()
         case Props(Some(Success(elem)), _)             => elem

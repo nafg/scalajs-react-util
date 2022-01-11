@@ -5,7 +5,7 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.util.Success
 
 import japgolly.scalajs.react.extra.{Broadcaster, Listenable, OnUnmount}
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.{Callback, ScalaComponent}
 
 
@@ -40,7 +40,7 @@ abstract class GlobalBusyIndicator extends HasBusyIndicator {
   val component =
     ScalaComponent.builder[Unit]("BusyIndicator")
       .initialState(Seq.empty[Future[Any]])
-      .backend(_ => new OnUnmount.Backend)
+      .backend(_ => OnUnmount())
       .render_S(render)
       .configure(Listenable.listen(_ => broadcaster, { self =>
         (fut: Future[Any]) =>

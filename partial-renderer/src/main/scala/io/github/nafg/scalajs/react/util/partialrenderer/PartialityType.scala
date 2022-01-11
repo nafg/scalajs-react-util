@@ -1,6 +1,6 @@
 package io.github.nafg.scalajs.react.util.partialrenderer
 
-import cats.implicits._
+import cats.implicits.*
 import monocle.Iso
 
 

@@ -1,10 +1,10 @@
 package io.github.nafg.scalajs.react.util.editor
 
-import japgolly.scalajs.react._
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.component.builder.Lifecycle.RenderScope
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.TagMod
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import io.github.nafg.scalajs.react.util.Debounce
 
 import cats.data.Validated
@@ -31,6 +31,7 @@ class Editor[A](fieldConstructor: FieldConstructor)(implicit format: Format[A], 
   val component =
     ScalaComponent.builder[Props](name.value)
       .initialStateFromProps(props => mkState(props.snapshot.value))
+      .noBackend
       .render { self =>
         val tagMods = TagMod(self.props.tagMod, ^.onBlur --> self.modState(canonicalize _))
         fieldConstructor.render(self.state, tagMods) { text =>

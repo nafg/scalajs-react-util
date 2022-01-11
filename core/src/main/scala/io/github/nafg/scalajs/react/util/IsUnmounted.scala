@@ -1,6 +1,6 @@
 package io.github.nafg.scalajs.react.util
 
-import japgolly.scalajs.react.component.Scala.Config
+import japgolly.scalajs.react.ScalaComponent.Config
 import japgolly.scalajs.react.{Callback, Children, UpdateSnapshot}
 
 

@@ -4,7 +4,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import org.scalajs.dom.html
 import japgolly.scalajs.react.extra.StateSnapshot
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.{Callback, CallbackOption, CallbackTo, ReactEventFromInput}
 
 
@@ -33,7 +33,7 @@ object SnapshotUtils {
     def toTagMod =
       TagMod(
         setAttr(snapshot.value),
-        ^.onChange ==> { event: ReactEventFromInput =>
+        ^.onChange ==> { (event: ReactEventFromInput) =>
           val value = property(event.target)
           snapshot.setState(value)
         }

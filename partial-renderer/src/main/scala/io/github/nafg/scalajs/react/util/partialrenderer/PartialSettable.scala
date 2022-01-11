@@ -4,9 +4,8 @@ import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.StateSnapshot
 import io.github.nafg.scalajs.react.util.SnapshotUtils.Snapshot
 
-import cats.implicits._
-import monocle.function.fields
-import monocle.{Iso, Lens}
+import cats.implicits.*
+import monocle.{Focus, Iso, Lens}
 
 
 case class PartialSettable[Partial, Full](partialityType: PartialityType[Partial, Full], value: Either[Partial, Full])
@@ -37,10 +36,10 @@ case class PartialSettable[Partial, Full](partialityType: PartialityType[Partial
       either2 =>
         either =>
           (either2, either) match {
-            case (Left(p2), Left(partial))  => Left(lensPartial.set(p2)(partial))
-            case (Left(p2), Right(full))    => Left(lensPartial.set(p2)(partialityType.fullToPartial(full)))
-            case (Right(f2), Left(partial)) => Left(lensPartial.set(pt2.fullToPartial(f2))(partial))
-            case (Right(f2), Right(full))   => Right(lensFull.set(f2)(full))
+            case (Left(p2), Left(partial))  => Left(lensPartial.replace(p2)(partial))
+            case (Left(p2), Right(full))    => Left(lensPartial.replace(p2)(partialityType.fullToPartial(full)))
+            case (Right(f2), Left(partial)) => Left(lensPartial.replace(pt2.fullToPartial(f2))(partial))
+            case (Right(f2), Right(full))   => Right(lensFull.replace(f2)(full))
           }
     }
 
@@ -53,17 +52,23 @@ case class PartialSettable[Partial, Full](partialityType: PartialityType[Partial
     PartialSettable(pt2, iso.get(value))(f => modify(iso.modify(f)))
 
   def xmapFull[F1](iso: Iso[Full, F1]): PartialSettable[Partial, F1] =
-    xmapEither(partialityType.xmapFull(iso.reverse))(iso.right)
+    xmapEither(partialityType.xmapFull(iso.reverse))(
+      Iso[Either[Partial, Full], Either[Partial, F1]](_.map(iso.get))(_.map(iso.reverseGet))
+    )
 
   def xmapPartial[P1](iso: Iso[Partial, P1]): PartialSettable[P1, Full] =
-    xmapEither(partialityType.xmapPartial(iso.reverse))(iso.left)
+    xmapEither(partialityType.xmapPartial(iso.reverse))(
+      Iso[Either[Partial, Full], Either[P1, Full]](_.leftMap(iso.get))(_.leftMap(iso.reverseGet))
+    )
 }
 object PartialSettable {
+  private def first[A, B] = Focus[(A, B)](_._1)
+  private def second[A, B] = Focus[(A, B)](_._2)
   def unzip[P1, P2, F1, F2](settable: PartialSettable[(P1, P2), (F1, F2)])
                            (pt1: PartialityType[P1, F1],
                             pt2: PartialityType[P2, F2]): (PartialSettable[P1, F1], PartialSettable[P2, F2]) =
     (
-      settable.zoom(pt1)(fields.first, fields.first),
-      settable.zoom(pt2)(fields.second, fields.second)
+      settable.zoom(pt1)(first, first),
+      settable.zoom(pt2)(second, second)
     )
 }

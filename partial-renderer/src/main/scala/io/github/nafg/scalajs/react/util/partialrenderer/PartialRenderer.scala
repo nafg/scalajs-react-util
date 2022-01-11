@@ -59,7 +59,7 @@ trait PartialRenderer[-Props, Partial, Full, +Out] { outer =>
     new PartialRenderer[Props, Partial, F1, Out] {
       override def partialityType = pt1
       override def render(props: Props, settable: PartialSettable[Partial, F1]) =
-        outer.render(props, settable.zoom(outer.partialityType)(Lens.id[Partial], Lens(get)(set)))
+        outer.render(props, settable.zoom(outer.partialityType)(Iso.id[Partial], Lens(get)(set)))
     }
 
   def unzoomEither[P1, F1](pt1: PartialityType[P1, F1])
@@ -69,7 +69,7 @@ trait PartialRenderer[-Props, Partial, Full, +Out] { outer =>
       override def render(props: Props, settable: PartialSettable[P1, F1]) =
         outer.render(props, settable.zoomEither(outer.partialityType)(lens))
     }
-  }
+}
 
 object PartialRenderer {
   type Vdom[-Props, P, F] = PartialRenderer[Props, P, F, VdomNode]
