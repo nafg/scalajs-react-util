@@ -5,7 +5,7 @@ name := "scalajs-react-util"
 
 ThisBuild / organization := "io.github.nafg.scalajs-react-util"
 
-ThisBuild / crossScalaVersions := Seq("2.13.7", "3.0.2")
+ThisBuild / crossScalaVersions := Seq("2.13.7", "3.1.0")
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.last
 
 def myScalacOptions(version: String) =
