@@ -1,29 +1,29 @@
 package io.github.nafg.scalajs.react.util.partialrenderer
 
-import cats.implicits.*
+import scala.annotation.unused
+
+import cats.implicits.catsSyntaxTuple2Semigroupal
 import monocle.Iso
 
 
 /**
- * Law: pst.partialToFull(pst.fullToPartial(full)) == Some(full)
+ * Law: pst.partialToFull(pst.fullToPartial(full)) == Right(full)
  *
- * Law: pst.partialToFull(partial).map(pst.fullToPartial) inSet (None, Some(partial))
+ * Law: pst.partialToFull(partial).toOption.map(pst.fullToPartial) inSet (None, Some(partial))
  */
-case class PartialityType[Partial, Full](default: Partial)
-                                        (val partialToFull: Partial => Option[Full])
-                                        (val fullToPartial: Full => Partial) {
-  type E = Either[Partial, Full]
+case class PartialityType[Partial, Full](default: Partial,
+                                         partialToFull: Partial => Either[String, Full],
+                                         fullToPartial: Full => Partial) {
+  private type TentativeType = Tentative[Partial, Full]
 
-  def partialToEither(partial: Partial): E = partialToFull(partial).toRight(partial)
+  lazy val iso: Iso[TentativeType, Partial] = Tentative.isoTentativePartialValue(this)
 
-  def eitherToPartial(either: E): Partial = either.map(fullToPartial).merge
-
-  lazy val iso = Iso(eitherToPartial)(partialToEither)
+  def normalize(tentative: TentativeType): TentativeType = iso.modify(identity)(tentative)
 
   def xmapPartial[P2](iso: Iso[P2, Partial]): PartialityType[P2, Full] =
-    PartialityType[P2, Full](iso.reverseGet(default))(p => partialToFull(iso.get(p))) { f =>
-      iso.reverseGet(fullToPartial(f))
-    }
+    PartialityType[P2, Full](
+      iso.reverseGet(default)
+    )(partialToFull.compose(iso.get))(fullToPartial.andThen(iso.reverseGet))
 
   def xmapFull[F2](iso: Iso[F2, Full]): PartialityType[Partial, F2] =
     PartialityType[Partial, F2](default)(partialToFull(_).map(iso.reverseGet))(f2 => fullToPartial(iso.get(f2)))
@@ -36,11 +36,17 @@ case class PartialityType[Partial, Full](default: Partial)
     }
 }
 object PartialityType {
-  def option[Full]: PartialityType[Option[Full], Full] =
-    PartialityType(Option.empty[Full])(identity)(Some(_))
+  def apply[Partial, Full](default: Partial)
+                          (partialToFull: Partial => Either[String, Full])
+                          (fullToPartial: Full => Partial,
+                           @unused dummy: Null = null): PartialityType[Partial, Full] =
+    new PartialityType(default, partialToFull, fullToPartial)
+
+  implicit def option[Full]: PartialityType[Option[Full], Full] =
+    PartialityType(Option.empty[Full])(_.toRight("Value is empty"))(Some(_))
 
   def full[Full](default: Full): PartialityType[Full, Full] =
-    PartialityType(default)(Some(_))(identity)
+    PartialityType(default)(Right(_))(identity)
 
-  lazy val unit = full(())
+  implicit lazy val unit: PartialityType[Unit, Unit] = full(())
 }
