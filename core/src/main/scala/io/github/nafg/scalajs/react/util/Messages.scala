@@ -4,17 +4,14 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 import japgolly.scalajs.react.ScalaComponent
-import japgolly.scalajs.react.extra.{Broadcaster, Listenable, OnUnmount}
+import japgolly.scalajs.react.extra.{Listenable, OnUnmount}
 import japgolly.scalajs.react.vdom.html_<^.*
 
 
 class Messages {
   case class Message(timeout: Double, content: TagMod)
 
-  private object broadcaster extends Broadcaster[Message] {
-    // overriding to make it public
-    override def broadcast(a: Message) = super.broadcast(a)
-  }
+  private object broadcaster extends PublicBroadcaster[Message]
 
   def post(timeout: Double = 1000)(content: TagMod*): Unit =
     broadcaster.broadcast(Message(timeout, content.toTagMod)).runNow()
