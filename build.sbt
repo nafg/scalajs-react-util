@@ -42,7 +42,10 @@ lazy val core =
       moduleName := "core",
       sjsCrossTarget,
       addScalajsReactModule("core"),
-      addScalajsReactModule("extra")
+      addScalajsReactModule("extra"),
+      libraryDependencies ++= Seq(
+        "org.scala-js" %%% "scala-js-macrotask-executor" % "1.1.1"
+      )
     )
 
 lazy val editor =
