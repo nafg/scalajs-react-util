@@ -7,6 +7,8 @@ import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.{Callback, CallbackOption, CallbackTo, ReactEventFromInput}
 
+import monocle.Optional
+
 
 object SnapshotUtils {
   def Snapshot[A](initialValue: A)(f: A => Callback) =
@@ -76,5 +78,42 @@ object SnapshotUtils {
       self.value.map { a =>
         Snapshot(a)(a => self.setState(Some(a)))
       }
+  }
+
+  implicit class Snapshot_sequenceEither[A, B](self: StateSnapshot[Either[A, B]]) {
+    def sequenceEither: Either[StateSnapshot[A], StateSnapshot[B]] =
+      self.value match {
+        case Left(value)  => Left(Snapshot(value)(value => self.setState(Left(value))))
+        case Right(value) => Right(Snapshot(value)(value => self.setState(Right(value))))
+      }
+  }
+
+  implicit class Snapshot_split[A, B](self: StateSnapshot[(A, B)]) {
+    def split: (StateSnapshot[A], StateSnapshot[B]) =
+      Snapshot(self.value._1)(a => self.modState(_.copy(_1 = a))) ->
+        Snapshot(self.value._2)(b => self.modState(_.copy(_2 = b)))
+  }
+
+  implicit class Snapshot_traverseOptional[A](self: StateSnapshot[A]) {
+    def traverseOptional[B](optional: Optional[A, B]): Option[StateSnapshot[B]] =
+      optional
+        .getOption(self.value)
+        .map(Snapshot(_)(b => self.modState(optional.replace(b))))
+  }
+
+  case class StateSnapshotElem[A](key: Int, state: StateSnapshot[A], delete: Callback)
+
+  implicit class SeqSnapshotExtensionMethods[A](self: StateSnapshot[Seq[A]]) {
+    def stateSnapshotElements: Seq[StateSnapshotElem[A]] =
+      self.value.zipWithIndex.map { case (a, n) =>
+        StateSnapshotElem(
+          n,
+          Snapshot(a)(a2 => self.modState(_.patch(n, List(a2), 1))),
+          self.modState(_.patch(n, Nil, 1))
+        )
+      }
+
+    def insertAt(index: Int, value: A) =
+      self.modState(_.patch(index, Some(value), 0))
   }
 }
