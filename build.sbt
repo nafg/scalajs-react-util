@@ -42,7 +42,11 @@ lazy val core =
       moduleName := "core",
       sjsCrossTarget,
       addScalajsReactModule("core"),
-      addScalajsReactModule("extra")
+      addScalajsReactModule("extra"),
+      libraryDependencies ++= Seq(
+        "org.scala-js" %%% "scala-js-macrotask-executor" % "1.1.1",
+        "dev.optics" %%% "monocle-macro" % "3.2.0"
+      )
     )
 
 lazy val editor =
@@ -61,7 +65,6 @@ lazy val `partial-renderer` =
     .settings(
       sjsCrossTarget,
       addScalajsReactModule("extra-ext-monocle3"),
-      libraryDependencies += "dev.optics" %%% "monocle-macro" % "3.2.0",
       libraryDependencies += "org.scalameta" %%% "munit" % "0.7.29" % Test,
       testFrameworks += new TestFramework("munit.Framework")
     )

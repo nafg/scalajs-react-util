@@ -3,24 +3,31 @@ package io.github.nafg.scalajs.react.util
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-import japgolly.scalajs.react.ScalaComponent
-import japgolly.scalajs.react.extra.{Broadcaster, Listenable, OnUnmount}
+import japgolly.scalajs.react.extra.{Listenable, OnUnmount}
 import japgolly.scalajs.react.vdom.html_<^.*
+import japgolly.scalajs.react.{Callback, ScalaComponent}
 
 
 class Messages {
   case class Message(timeout: Double, content: TagMod)
 
-  private object broadcaster extends Broadcaster[Message] {
-    // overriding to make it public
-    override def broadcast(a: Message) = super.broadcast(a)
-  }
+  private object broadcaster extends PublicBroadcaster[Message]
 
   def post(timeout: Double = 1000)(content: TagMod*): Unit =
     broadcaster.broadcast(Message(timeout, content.toTagMod)).runNow()
+  def postCB(timeout: Double = 1000)(content: TagMod*) = Callback {
+    post(timeout)(content *)
+  }
 
   def postSuccess(message: TagMod): Unit = post(500)(^.cls := "alert alert-success", message)
+  def postSuccessCB(message: VdomNode) = Callback {
+    postSuccess(message)
+  }
+
   def postError(message: TagMod): Unit = post(5000)(^.cls := "alert alert-danger", message)
+  def postErrorCB(message: VdomNode) = Callback {
+    postError(message)
+  }
 
   def defaultErrorMessage: Throwable => TagMod = _ => "An error occurred"
 
