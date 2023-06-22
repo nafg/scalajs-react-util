@@ -1,7 +1,6 @@
 package io.github.nafg.scalajs.react.util.partialrenderer
 
-import scala.scalajs.js
-
+import org.scalajs.dom
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.ReactMonocle.MonocleReactExt_StateSnapshot
 import japgolly.scalajs.react.extra.StateSnapshot
@@ -14,8 +13,7 @@ case class PartialSettable[Partial, Full] private(settable: Settable[Tentative[P
   if (!scalajs.runtime.linkingInfo.productionMode) {
     val normalized = partialityType.normalize(value)
     if (normalized != value) {
-      js.Dynamic.global.window.PS = js.Array(value, normalized)
-      throw new AssertionError(s"\n  $value\nnormalizes to\n  $normalized")
+      dom.console.error(s"\n  $value\nnormalizes to\n  $normalized")
     }
   }
 
