@@ -13,21 +13,19 @@ class Messages {
 
   private object broadcaster extends PublicBroadcaster[Message]
 
-  def post(timeout: Double = 1000)(content: TagMod*): Unit =
-    broadcaster.publish(Message(timeout, content.toTagMod)).runNow()
-  def postCB(timeout: Double = 1000)(content: TagMod*) = Callback {
-    post(timeout)(content *)
-  }
+  def postCB(timeout: Double = 1000)(content: TagMod*): Callback =
+    broadcaster.publish(Message(timeout, content.toTagMod))
 
-  def postSuccess(message: TagMod): Unit = post(500)(^.cls := "alert alert-success", message)
-  def postSuccessCB(message: VdomNode) = Callback {
-    postSuccess(message)
-  }
+  @deprecated("Use postCB(...)(...).runNow()", "0.12.1")
+  def post(timeout: Double = 1000)(content: TagMod*): Unit = postCB(timeout)(content *).runNow()
 
-  def postError(message: TagMod): Unit = post(5000)(^.cls := "alert alert-danger", message)
-  def postErrorCB(message: VdomNode) = Callback {
-    postError(message)
-  }
+  def postSuccessCB(message: TagMod) = postCB(500)(^.cls := "alert alert-success", message)
+  @deprecated("Use postSuccessCB(...).runNow()", "0.12.1")
+  def postSuccess(message: TagMod) = postSuccessCB(message).runNow()
+
+  def postErrorCB(message: TagMod) = postCB(5000)(^.cls := "alert alert-danger", message)
+  @deprecated("Use postErrorCB(...).runNow()", "0.12.1")
+  def postError(message: TagMod) = postErrorCB(message).runNow()
 
   def defaultErrorMessage: Throwable => TagMod = _ => "An error occurred"
 
@@ -35,12 +33,12 @@ class Messages {
                      (success: A => TagMod = (_: A) => "Done!",
                       failure: Throwable => TagMod = defaultErrorMessage)
                      (implicit executionContext: ExecutionContext): Future[A] =
-    notifyFailure(future andThen { case Success(value) => postSuccess(success(value)) })(failure)
+    notifyFailure(future andThen { case Success(value) => postSuccessCB(success(value)).runNow() })(failure)
 
   def notifyFailure[A](future: Future[A])
                       (failure: Throwable => TagMod = defaultErrorMessage)
                       (implicit executionContext: ExecutionContext): Future[A] =
-    future andThen { case Failure(exception) => postError(failure(exception)) }
+    future andThen { case Failure(exception) => postErrorCB(failure(exception)).runNow() }
 
   object Implicits {
     implicit class FutureMessagesExtensionMethods[A](self: Future[A]) {
