@@ -24,14 +24,14 @@ class WatchTaskExtensionMethods(busyIndicator: GlobalBusyIndicator, messages: Me
 
     def watch: F[A]
     /**
-     * Wrap `fut` as a [[Callback]], with a busy indicator and failure notification message
+     * Wrap `fut` as a `Callback`, with a busy indicator and failure notification message
      */
     final def watchCB(implicit ev: A =:= Callback): Callback =
       toCB(ev.substituteCo(watch))
 
     def watchResult: F[A]
     /**
-     * Wrap `fut` as a [[Callback]], with a busy indicator and result notification message
+     * Wrap `fut` as a `Callback`, with a busy indicator and result notification message
      */
     final def watchResultCB(implicit ev: A =:= Callback): Callback =
       toCB(ev.substituteCo(watch))
