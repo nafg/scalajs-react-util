@@ -14,7 +14,7 @@ class Messages {
   private object broadcaster extends PublicBroadcaster[Message]
 
   def post(timeout: Double = 1000)(content: TagMod*): Unit =
-    broadcaster.broadcast(Message(timeout, content.toTagMod)).runNow()
+    broadcaster.publish(Message(timeout, content.toTagMod)).runNow()
   def postCB(timeout: Double = 1000)(content: TagMod*) = Callback {
     post(timeout)(content *)
   }
