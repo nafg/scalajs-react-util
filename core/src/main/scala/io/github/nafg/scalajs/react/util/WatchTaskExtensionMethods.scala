@@ -13,10 +13,10 @@ class WatchTaskExtensionMethods(busyIndicator: GlobalBusyIndicator, messages: Me
   private def notifyFailure[A](future: => Future[A]) =
     future.andThen {
       case Failure(exception) if exception != ConfirmCanceled =>
-        messages.postError(messages.defaultErrorMessage(exception))
+        messages.postErrorCB(messages.defaultErrorMessage(exception)).runNow()
     }
   private def notifyResult[A](future: => Future[A]) =
-    notifyFailure(future.andThen { case Success(_) => messages.postSuccess("Done!") })
+    notifyFailure(future.andThen { case Success(_) => messages.postSuccessCB("Done!").runNow() })
 
   trait ExtensionMethods[F[_], A] {
     protected def toCB(f: => F[Callback]): Callback
