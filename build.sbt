@@ -1,4 +1,4 @@
-import _root_.io.github.nafg.scalacoptions._
+import _root_.io.github.nafg.scalacoptions.*
 
 
 name := "scalajs-react-util"
