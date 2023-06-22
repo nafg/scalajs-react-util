@@ -3,9 +3,10 @@ package io.github.nafg.scalajs.react.util
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-import japgolly.scalajs.react.extra.{Listenable, OnUnmount}
+import japgolly.scalajs.react.extra.OnUnmount
 import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.{Callback, ScalaComponent}
+import io.github.nafg.scalajs.react.util.ReactImplicits.step4_listen
 
 
 class Messages {
@@ -78,11 +79,12 @@ class Messages {
       .initialState(Seq.empty[Message])
       .backend(_ => OnUnmount())
       .render_S(render)
-      .configure(Listenable.listen(_ => broadcaster, { self =>
-        (msg: Message) =>
-          self.modState(messages => msg +: messages) >>
-            self.modState(messages => messages.filter(_ ne msg)).delayMs(msg.timeout).void.toCallback
-      }))
+      .listen(_ => broadcaster) {
+        msg =>
+          self =>
+            self.modStateAsync(msg +: _) >>
+              self.modStateAsync(_.filter(_ ne msg)).delayMs(msg.timeout)
+      }
       .build
 }
 

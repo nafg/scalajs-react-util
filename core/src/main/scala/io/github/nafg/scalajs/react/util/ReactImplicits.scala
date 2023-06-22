@@ -10,6 +10,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.component.builder.{ComponentBuilder, Lifecycle}
 import japgolly.scalajs.react.extra.{Listenable, OnUnmount, StateSnapshot}
 import japgolly.scalajs.react.facade.SyntheticEvent
+import japgolly.scalajs.react.util.Effect.Dispatch
 import japgolly.scalajs.react.vdom.{Attr, VdomNode}
 import io.github.nafg.scalajs.react.util.SnapshotUtils.Snapshot
 
@@ -64,15 +65,15 @@ object ReactImplicits {
     U <: UpdateSnapshot
   ](private val self: ComponentBuilder.LastStep[P, C, S, B, U]) extends AnyVal {
 
-    def listen[A](listenable: P => Listenable[A])
-                 (makeListener: A => Lifecycle.ComponentDidMount[P, S, B] => Callback)
-                 (implicit ev: B <:< OnUnmount): ComponentBuilder.LastStep[P, C, S, B, U] = {
+    def listen[F[_] : Dispatch, A](listenable: P => Listenable[A])
+                                  (makeListener: A => Lifecycle.ComponentDidMount[P, S, B] => F[Unit])
+                                  (implicit ev: B <:< OnUnmount): ComponentBuilder.LastStep[P, C, S, B, U] = {
       type Step4Out[-BB] = ComponentBuilder.LastStep[P, C, S, BB@uncheckedVariance, U]
       type Step4In[+BB] = ComponentBuilder.LastStep[P, C, S, BB@uncheckedVariance, U]
       type $[-BB] = Lifecycle.ComponentDidMount[P, S, BB@uncheckedVariance]
 
       val config =
-        Listenable.listen[CallbackTo, P, C, S, OnUnmount, U, A](
+        Listenable.listen[F, P, C, S, OnUnmount, U, A](
           listenable = listenable,
           makeListener = $ => makeListener(_)(ev.substituteContra[$]($))
         )
