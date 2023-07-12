@@ -34,7 +34,7 @@ class WatchTaskExtensionMethods(busyIndicator: GlobalBusyIndicator, messages: Me
      * Wrap `fut` as a `Callback`, with a busy indicator and result notification message
      */
     final def watchResultCB(implicit ev: A =:= Callback): Callback =
-      toCB(ev.substituteCo(watch))
+      toCB(ev.substituteCo(watchResult))
     final def watchResultACB: AsyncCallback[A] = toACB(watchResult)
   }
 
