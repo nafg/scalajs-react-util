@@ -3,13 +3,12 @@ package io.github.nafg.scalajs.react.util
 import japgolly.scalajs.react.ScalaComponent.Config
 import japgolly.scalajs.react.{Callback, Children, UpdateSnapshot}
 
-
 trait IsUnmounted {
   private var unmounting = false
-  def setUnmounting = Callback {
+  def setUnmounting      = Callback {
     unmounting = true
   }
-  def isUnmounted = unmounting
+  def isUnmounted        = unmounting
 }
 
 object IsUnmounted {

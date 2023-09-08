@@ -2,8 +2,7 @@ package io.github.nafg.scalajs.react.util
 
 import japgolly.scalajs.react.vdom.VdomNode
 
-
-trait LoadingIndicator {
+trait LoadingIndicator  {
   def render: VdomNode
 }
 object LoadingIndicator {

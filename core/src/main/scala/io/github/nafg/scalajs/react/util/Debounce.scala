@@ -8,7 +8,6 @@ import scala.scalajs.js.timers.SetTimeoutHandle
 import japgolly.scalajs.react.Callback
 import scala.concurrent.duration._
 
-
 object Debounce {
   private val DefaultDuration = 250.milli
 
@@ -41,9 +40,10 @@ object Debounce {
       }
   }
 
-  def future[A, B](duration: FiniteDuration = DefaultDuration)(f: A => Future[B])
-                  (implicit executionContext: ExecutionContext): A => Future[B] = {
-    var timeout = Option.empty[SetTimeoutHandle]
+  def future[A, B](
+    duration: FiniteDuration = DefaultDuration
+  )(f: A => Future[B])(implicit executionContext: ExecutionContext): A => Future[B] = {
+    var timeout       = Option.empty[SetTimeoutHandle]
     var invocationNum = 0
 
     def impl(a: A): Future[B] = {

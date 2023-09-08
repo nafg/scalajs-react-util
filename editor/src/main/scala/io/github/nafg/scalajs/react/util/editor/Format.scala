@@ -11,7 +11,6 @@ import monocle.Prism
 
 import cats.implicits._
 
-
 case class Format[A](format: A => String, parse: String => Validated[TagMod, A])
 
 object Format {
@@ -26,19 +25,21 @@ object Format {
   implicit def maybe[A](implicit underlying: Format[A]): Format[Option[A]] =
     apply(s => if (s.isEmpty) None.valid else underlying.parse(s).map(Some(_)))(_.fold("")(underlying.format))
 
-  implicit val string: Format[String] =
+  implicit val string: Format[String]         =
     apply(Validated.valid)(identity)
-  implicit val int: Format[Int] =
+  implicit val int: Format[Int]               =
     apply(str => Validated.catchOnly[NumberFormatException](str.toInt).leftMap(message))(_.toString)
-  implicit val double: Format[Double] =
+  implicit val double: Format[Double]         =
     apply(str => Validated.catchOnly[NumberFormatException](str.toDouble).leftMap(message))(_.toString)
   implicit val bigDecimal: Format[BigDecimal] =
     apply(str => Validated.catchOnly[NumberFormatException](BigDecimal(str)).leftMap(message))(_.toString)
 
-  def localTime(dtf: DateTimeFormatter): Format[LocalTime] =
+  def localTime(dtf: DateTimeFormatter): Format[LocalTime]         =
     apply(str => Validated.catchOnly[DateTimeParseException](LocalTime.parse(str, dtf)).leftMap(message))(dtf.format)
-  def localDate(dtf: DateTimeFormatter): Format[LocalDate] =
+  def localDate(dtf: DateTimeFormatter): Format[LocalDate]         =
     apply(str => Validated.catchOnly[DateTimeParseException](LocalDate.parse(str, dtf)).leftMap(message))(dtf.format)
   def localDateTime(dtf: DateTimeFormatter): Format[LocalDateTime] =
-    apply(str => Validated.catchOnly[DateTimeParseException](LocalDateTime.parse(str, dtf)).leftMap(message))(dtf.format)
+    apply(str => Validated.catchOnly[DateTimeParseException](LocalDateTime.parse(str, dtf)).leftMap(message))(
+      dtf.format
+    )
 }

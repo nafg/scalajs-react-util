@@ -6,11 +6,10 @@ import japgolly.scalajs.react.{Callback, ReactEventFromInput}
 
 import sourcecode.FullName
 
-
 trait FieldConstructor {
   def render(editorState: Editor.State[_], tagMod: TagMod)(onChange: String => Callback): VdomElement
 
-  final def editorOf[A](implicit format: Format[A], name: FullName): Editor[A] =
+  final def editorOf[A](implicit format: Format[A], name: FullName): Editor[A]                               =
     new Editor[A](this)(format, name)
   final def editorOf[A](format: Format[A])(implicit name: FullName, dummyImplicit: DummyImplicit): Editor[A] =
     new Editor[A](this)(format, name)

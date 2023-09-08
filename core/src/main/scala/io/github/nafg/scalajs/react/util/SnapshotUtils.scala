@@ -9,7 +9,6 @@ import japgolly.scalajs.react.{Callback, CallbackOption, CallbackTo, ReactEventF
 
 import monocle.Optional
 
-
 object SnapshotUtils {
   def Snapshot[A](initialValue: A)(f: A => Callback) =
     StateSnapshot(initialValue)((option, cb) => option.fold(cb)(f(_) >> cb))
@@ -43,21 +42,23 @@ object SnapshotUtils {
   }
 
   implicit class StringSnapshotExtensionMethods(override protected val snapshot: StateSnapshot[String])
-    extends AnyVal with HasToTagMod[String] {
-    override protected def setAttr = ^.value := _
+      extends AnyVal
+      with HasToTagMod[String] {
+    override protected def setAttr  = ^.value := _
     override protected def property = _.value
   }
 
   implicit class BooleanSnapshotExtensionMethods(override protected val snapshot: StateSnapshot[Boolean])
-    extends AnyVal with HasToTagMod[Boolean] {
-    override protected def setAttr = ^.checked := _
+      extends AnyVal
+      with HasToTagMod[Boolean] {
+    override protected def setAttr  = ^.checked := _
     override protected def property = _.checked
   }
 
   implicit class OptionSnapshotExtensionMethods[A](self: StateSnapshot[Option[A]]) {
-    def zoomDefinedFut(create: => Future[A])
-                      (delete: A => CallbackOption[Future[Unit]] = _ => CallbackTo(Future.unit).toCBO)
-                      (implicit executionContext: ExecutionContext): StateSnapshot[Boolean] =
+    def zoomDefinedFut(create: => Future[A])(
+      delete: A => CallbackOption[Future[Unit]] = _ => CallbackTo(Future.unit).toCBO
+    )(implicit executionContext: ExecutionContext): StateSnapshot[Boolean] =
       Snapshot(self.value.isDefined) { checked =>
         self.value match {
           case None if checked     =>

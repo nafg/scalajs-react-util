@@ -8,7 +8,6 @@ import japgolly.scalajs.react.extra.{Broadcaster, Listenable, OnUnmount}
 import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.{Callback, ScalaComponent}
 
-
 abstract class GlobalBusyIndicator extends HasBusyIndicator {
   private object broadcaster extends Broadcaster[Future[Any]] {
     override def broadcast(a: Future[Any]) = super.broadcast(a)
@@ -27,26 +26,31 @@ abstract class GlobalBusyIndicator extends HasBusyIndicator {
 
   def positionMods = TagMod(
     ^.position.fixed,
-    ^.left := "50%", ^.top := "35px",
-    ^.marginBottom := "0px", ^.marginLeft := "-16px",
-    ^.zIndex := "2000"
+    ^.left         := "50%",
+    ^.top          := "35px",
+    ^.marginBottom := "0px",
+    ^.marginLeft   := "-16px",
+    ^.zIndex       := "2000"
   )
 
   def render(futures: Seq[Future[Any]]) =
-    busyIndicator(positionMods)(
-      ^.visibility.hidden when futures.forall(_.isCompleted)
-    )
+    busyIndicator(positionMods)(^.visibility.hidden when futures.forall(_.isCompleted))
 
   val component =
-    ScalaComponent.builder[Unit]("BusyIndicator")
+    ScalaComponent
+      .builder[Unit]("BusyIndicator")
       .initialState(Seq.empty[Future[Any]])
       .backend(_ => OnUnmount())
       .render_S(render)
-      .configure(Listenable.listen(_ => broadcaster, { self =>
-        (fut: Future[Any]) =>
-          self.modState(fut +: _) >>
-            Callback.future(fut.transform(_ => Success(self.modState(_.filter(_ ne fut))))).void
-      }))
+      .configure(
+        Listenable.listen(
+          _ => broadcaster,
+          { self => (fut: Future[Any]) =>
+            self.modState(fut +: _) >>
+              Callback.future(fut.transform(_ => Success(self.modState(_.filter(_ ne fut))))).void
+          }
+        )
+      )
       .build
 }
 

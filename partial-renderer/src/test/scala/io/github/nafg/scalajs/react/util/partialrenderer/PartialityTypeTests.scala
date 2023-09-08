@@ -4,7 +4,6 @@ import scala.util.Try
 
 import monocle.Iso
 
-
 class PartialityTypeTests extends munit.FunSuite {
   test("PartialStateType.full") {
     val a = PartialityType.full("hello")
