@@ -10,14 +10,15 @@ import io.github.nafg.scalajs.react.util.Debounce
 import cats.data.Validated
 import sourcecode.FullName
 
-
 object Editor {
   case class State[A](text: String, validated: Validated[TagMod, A])
 }
 
 class Editor[A](fieldConstructor: FieldConstructor)(implicit format: Format[A], name: FullName) {
-  def this(fieldConstructor: FieldConstructor, format: Format[A])
-          (implicit name: FullName, dummyImplicit: DummyImplicit) =
+  def this(fieldConstructor: FieldConstructor, format: Format[A])(implicit
+    name: FullName,
+    dummyImplicit: DummyImplicit
+  ) =
     this(fieldConstructor)(format, name)
 
   case class Props(snapshot: StateSnapshot[A], tagMod: TagMod)
@@ -29,7 +30,8 @@ class Editor[A](fieldConstructor: FieldConstructor)(implicit format: Format[A], 
     Debounce.callback() { case (self, v) => self.props.snapshot.setState(v) }
 
   val component =
-    ScalaComponent.builder[Props](name.value)
+    ScalaComponent
+      .builder[Props](name.value)
       .initialStateFromProps(props => mkState(props.snapshot.value))
       .noBackend
       .render { self =>

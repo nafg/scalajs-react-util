@@ -5,7 +5,6 @@ import scala.util.control.NoStackTrace
 import japgolly.scalajs.react.callback.AsyncCallback
 import japgolly.scalajs.react.{CallbackOption, CallbackTo}
 
-
 object confirm {
   case object ConfirmCanceled extends RuntimeException with NoStackTrace
 

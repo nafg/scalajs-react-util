@@ -2,7 +2,6 @@ package io.github.nafg.scalajs.react.util.partialrenderer
 
 import japgolly.scalajs.react.Callback
 
-
 class PartialSettableTests extends munit.FunSuite {
   class VarSnapshot[P, F](implicit partialityType: PartialityType[P, F]) {
     var value: Tentative[P, F] = Tentative.Partial(partialityType.default)
