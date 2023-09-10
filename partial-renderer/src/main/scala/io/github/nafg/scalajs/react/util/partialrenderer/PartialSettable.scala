@@ -7,9 +7,9 @@ import japgolly.scalajs.react.extra.StateSnapshot
 
 import monocle.{Focus, Iso, Lens}
 
-
-case class PartialSettable[Partial, Full] private(settable: Settable[Tentative[Partial, Full]])
-                                                 (implicit val partialityType: PartialityType[Partial, Full]) {
+case class PartialSettable[Partial, Full] private (settable: Settable[Tentative[Partial, Full]])(implicit
+  val partialityType: PartialityType[Partial, Full]
+) {
   if (!scalajs.runtime.linkingInfo.productionMode) {
     val normalized = partialityType.normalize(value)
     if (normalized != value) {
@@ -37,22 +37,24 @@ case class PartialSettable[Partial, Full] private(settable: Settable[Tentative[P
 
   def statePartial: StateSnapshot[Partial] = state.xmapStateL(partialityType.iso)
 
-  def zoom[P2, F2](lens: Lens[Tentative[Partial, Full], Tentative[P2, F2]])
-                  (implicit partialityType2: PartialityType[P2, F2]): PartialSettable[P2, F2] =
+  def zoom[P2, F2](lens: Lens[Tentative[Partial, Full], Tentative[P2, F2]])(implicit
+    partialityType2: PartialityType[P2, F2]
+  ): PartialSettable[P2, F2] =
     PartialSettable(settable.zoom(lens.andThen(Iso.involuted(partialityType2.normalize))))
 
-  def zoom[P2, F2](get: Tentative[Partial, Full] => Tentative[P2, F2])
-                  (set: Tentative[P2, F2] => Tentative[Partial, Full] => Tentative[Partial, Full])
-                  (implicit partialityType2: PartialityType[P2, F2]): PartialSettable[P2, F2] =
+  def zoom[P2, F2](get: Tentative[Partial, Full] => Tentative[P2, F2])(
+    set: Tentative[P2, F2] => Tentative[Partial, Full] => Tentative[Partial, Full]
+  )(implicit partialityType2: PartialityType[P2, F2]): PartialSettable[P2, F2] =
     PartialSettable(settable.zoom(get)(set))
 
-  def zoom[P2, F2](lensPartial: Lens[Partial, P2], lensFull: Lens[Full, F2])
-                  (implicit partialityType2: PartialityType[P2, F2]): PartialSettable[P2, F2] =
+  def zoom[P2, F2](lensPartial: Lens[Partial, P2], lensFull: Lens[Full, F2])(implicit
+    partialityType2: PartialityType[P2, F2]
+  ): PartialSettable[P2, F2] =
     zoom(Tentative.lensTentative(lensPartial, lensFull))
 
-  def xmap[P2, F2](get: Tentative[Partial, Full] => Tentative[P2, F2])
-                  (reverseGet: Tentative[P2, F2] => Tentative[Partial, Full])
-                  (implicit partialityType2: PartialityType[P2, F2]): PartialSettable[P2, F2] =
+  def xmap[P2, F2](get: Tentative[Partial, Full] => Tentative[P2, F2])(
+    reverseGet: Tentative[P2, F2] => Tentative[Partial, Full]
+  )(implicit partialityType2: PartialityType[P2, F2]): PartialSettable[P2, F2] =
     PartialSettable(settable.xmap(get)(reverseGet))
 
   def xmapFull[F1](iso: Iso[Full, F1]): PartialSettable[Partial, F1] =
@@ -62,18 +64,15 @@ case class PartialSettable[Partial, Full] private(settable: Settable[Tentative[P
     xmap(_.mapPartial(iso.get))(_.mapPartial(iso.reverseGet))(partialityType.xmapPartial(iso.reverse))
 }
 object PartialSettable {
-  def apply[Partial, Full](value: Tentative[Partial, Full])
-                          (modify: (Tentative[Partial, Full] => Tentative[Partial, Full]) => Callback)
-                          (implicit partialityType: PartialityType[Partial, Full]) =
+  def apply[Partial, Full](value: Tentative[Partial, Full])(
+    modify: (Tentative[Partial, Full] => Tentative[Partial, Full]) => Callback
+  )(implicit partialityType: PartialityType[Partial, Full]) =
     new PartialSettable(Settable(partialityType.normalize(value))(modify))
 
-  private def first[A, B] = Focus[(A, B)](_._1)
+  private def first[A, B]  = Focus[(A, B)](_._1)
   private def second[A, B] = Focus[(A, B)](_._2)
-  def unzip[P1, P2, F1, F2](settable: PartialSettable[(P1, P2), (F1, F2)])
-                           (pt1: PartialityType[P1, F1],
-                            pt2: PartialityType[P2, F2]): (PartialSettable[P1, F1], PartialSettable[P2, F2]) =
-    (
-      settable.zoom(first, first)(pt1),
-      settable.zoom(second, second)(pt2)
-    )
+  def unzip[P1, P2, F1, F2](
+    settable: PartialSettable[(P1, P2), (F1, F2)]
+  )(pt1: PartialityType[P1, F1], pt2: PartialityType[P2, F2]): (PartialSettable[P1, F1], PartialSettable[P2, F2]) =
+    (settable.zoom(first, first)(pt1), settable.zoom(second, second)(pt2))
 }

@@ -7,34 +7,35 @@ import japgolly.scalajs.react.component.builder.ComponentBuilder.LastStep
 import japgolly.scalajs.react.component.builder.Lifecycle.{Base, StateW}
 import japgolly.scalajs.react.{Callback, Children, UpdateSnapshot}
 
-
-/**
- * Reuse logic for componentDidMount and componentWillReceiveProps to asynchronously compute the state from the props
- * Can accept a predicate to use in componentWillReceiveProps, to compare currentProps with nextProps
- * Methods with "always" in the name don't take a predicate
- * Methods with "const" in the name expect the computation to produce a Future[S] for setState;
- * the other methods expect it to produce a Future[S => S] for modState.
- */
+/** Reuse logic for componentDidMount and componentWillReceiveProps to asynchronously compute the state from the props
+  * Can accept a predicate to use in componentWillReceiveProps, to compare currentProps with nextProps Methods with
+  * "always" in the name don't take a predicate Methods with "const" in the name expect the computation to produce a
+  * Future[S] for setState; the other methods expect it to produce a Future[S => S] for modState.
+  */
 object AsyncStateFromProps {
   private def fnConst[S]: S => S => S = s => _ => s
 
   def always[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](compute: (P, S, B) => Future[S => S]) =
     apply[P, C, S, B, US](_ != _)(compute)
-  def const[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](predicate: (P, P) => Boolean)
-                                                                        (compute: (P, S, B) => Future[S]) =
+  def const[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](predicate: (P, P) => Boolean)(
+    compute: (P, S, B) => Future[S]
+  ) =
     apply[P, C, S, B, US](predicate)(compute(_, _, _).map(fnConst))
   def constAlways[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](compute: (P, S, B) => Future[S]) =
     apply[P, C, S, B, US](_ != _)(compute(_, _, _).map(fnConst))
-  def apply[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](predicate: (P, P) => Boolean)
-                                                                        (compute: (P, S, B) => Future[S => S]) =
+  def apply[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](predicate: (P, P) => Boolean)(
+    compute: (P, S, B) => Future[S => S]
+  ) =
     (self: LastStep[P, C, S, B, US]) => ext(self).asyncStateFromProps(predicate)(compute)
 
   implicit class ext[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](self: LastStep[P, C, S, B, US]) {
     object asyncStateFromProps {
       def apply(predicate: (P, P) => Boolean)(compute: (P, S, B) => Future[S => S]) = {
         val run: (P, S, Base[P, S, B] & StateW[P, S, B]) => Callback = { (props, state, self) =>
-          Callback.future(compute(props, state, self.backend)
-            .map(f => Callback.unless(self.backend.isUnmounted)(self.modState(f))))
+          Callback.future(
+            compute(props, state, self.backend)
+              .map(f => Callback.unless(self.backend.isUnmounted)(self.modState(f)))
+          )
         }
         self
           .componentDidMount(self => run(self.props, self.state, self))

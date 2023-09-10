@@ -10,7 +10,6 @@ import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.{AsyncCallback, React}
 
-
 package object util {
   def addOnBeforeUnload(preventLeaveCondition: => Boolean) =
     Callback {
@@ -27,8 +26,8 @@ package object util {
       )
     }
 
-  def suspendFuture[A](f: => Future[A])
-                      (render: A => VdomElement)
-                      (implicit loadingIndicator: LoadingIndicator = LoadingIndicator.spinner16) =
+  def suspendFuture[A](f: => Future[A])(render: A => VdomElement)(implicit
+    loadingIndicator: LoadingIndicator = LoadingIndicator.spinner16
+  ) =
     React.Suspense(loadingIndicator.render, AsyncCallback.fromFuture(f))(render, implicitly)
 }
