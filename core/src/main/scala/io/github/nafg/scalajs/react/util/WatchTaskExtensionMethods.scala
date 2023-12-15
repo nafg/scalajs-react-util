@@ -19,7 +19,7 @@ class WatchTaskExtensionMethods(busyIndicator: GlobalBusyIndicator, messages: Me
 
   trait ExtensionMethods[F[_], A] {
     protected def toCB(f: => F[Callback]): Callback
-    protected def toACB: F[A] => AsyncCallback[A]
+    protected def toACB(f: => F[A]): AsyncCallback[A]
 
     def watch: F[A]
 
@@ -39,15 +39,15 @@ class WatchTaskExtensionMethods(busyIndicator: GlobalBusyIndicator, messages: Me
 
   implicit class future[A](self: => Future[A]) extends ExtensionMethods[Future, A] {
     override protected def toCB(f: => Future[Callback]) = Callback.future(f)
-    override protected def toACB                        = AsyncCallback.fromFuture(_)
+    override protected def toACB(f: => Future[A])       = AsyncCallback.fromFuture(f)
     override def watch                                  = notifyFailure(busyIndicator.showBusy(self))
     override def watchResult                            = notifyResult(busyIndicator.showBusy(self))
   }
 
   implicit class asyncCallback[A](self: AsyncCallback[A]) extends ExtensionMethods[AsyncCallback, A] {
-    override protected def toCB(f: => AsyncCallback[Callback]): Callback = f.toCallback
-    override protected def toACB: AsyncCallback[A] => AsyncCallback[A]   = identity
-    private def run(f: Future[A] => Future[A])                           =
+    override protected def toCB(f: => AsyncCallback[Callback]): Callback   = f.toCallback
+    override protected def toACB(f: => AsyncCallback[A]): AsyncCallback[A] = f
+    private def run(f: Future[A] => Future[A])                             =
       AsyncCallback
         .delay {
           val promise = Promise[A]()
