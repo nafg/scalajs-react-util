@@ -1,6 +1,6 @@
 package io.github.nafg.scalajs.react.util
 
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.vdom.{HtmlTopNode, TagOf}
 
 trait HasBusyIndicator {
@@ -8,5 +8,5 @@ trait HasBusyIndicator {
 }
 
 trait HasSpinnerImage extends HasBusyIndicator {
-  override def busyIndicator = <.img(^.src := SpinnerImage.uri)
+  override def busyIndicator: TagOf[HtmlTopNode] = <.img(^.src := SpinnerImage.uri)
 }

@@ -12,19 +12,19 @@ sealed trait Tentative[+P, +F] {
 
 object Tentative {
   case class Partial[+P](partial: P, override val error: Option[String] = None) extends Tentative[P, Nothing] {
-    override def toString                                         = s"Tentative.Partial($partial, $error)"
-    override def mapPartial[P1 >: P, P2](f: P1 => P2)             = Partial(f(partial), error)
-    override def mapFull[F1 >: Nothing, F2](f: F1 => F2)          = this
-    override def fold[A](onPartial: P => A, onFull: Nothing => A) = onPartial(partial)
+    override def toString                                            = s"Tentative.Partial($partial, $error)"
+    override def mapPartial[P1 >: P, P2](f: P1 => P2): Partial[P2]   = Partial(f(partial), error)
+    override def mapFull[F1 >: Nothing, F2](f: F1 => F2): Partial[P] = this
+    override def fold[A](onPartial: P => A, onFull: Nothing => A): A = onPartial(partial)
     override def partialValue[P1 >: P, F1 >: Nothing](implicit partialityType: PartialityType[P1, F1]): P1 = partial
   }
 
   case class Full[+F](full: F) extends Tentative[Nothing, F] {
-    override def toString                                         = s"Tentative.Full($full)"
-    override def error: Option[String]                            = None
-    override def mapPartial[P1 >: Nothing, P2](f: P1 => P2)       = this
-    override def mapFull[F1 >: F, F2](f: F1 => F2)                = Full(f(full))
-    override def fold[A](onPartial: Nothing => A, onFull: F => A) = onFull(full)
+    override def toString                                            = s"Tentative.Full($full)"
+    override def error: Option[String]                               = None
+    override def mapPartial[P1 >: Nothing, P2](f: P1 => P2): Full[F] = this
+    override def mapFull[F1 >: F, F2](f: F1 => F2): Full[F2]         = Full(f(full))
+    override def fold[A](onPartial: Nothing => A, onFull: F => A): A = onFull(full)
     override def partialValue[P1 >: Nothing, F1 >: F](implicit partialityType: PartialityType[P1, F1]): P1 =
       partialityType.fullToPartial(full)
   }
@@ -41,7 +41,7 @@ object Tentative {
   def default[P, F](implicit partialityType: PartialityType[P, F]): Tentative[P, F] =
     Tentative(partialityType.default)
 
-  def isoTentativePartialValue[P, F](implicit partialityType: PartialityType[P, F]) =
+  def isoTentativePartialValue[P, F](implicit partialityType: PartialityType[P, F]): Iso[Tentative[P, F], P] =
     Iso[Tentative[P, F], P](_.partialValue)(Tentative(_))
 
   def lensTentative[P1, F1, P2, F2](lensPartial: Lens[P1, P2], lensFull: Lens[F1, F2])(implicit

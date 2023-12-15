@@ -7,7 +7,7 @@ import japgolly.scalajs.react.extra.StateSnapshot
 
 import monocle.{Focus, Iso, Lens}
 
-case class PartialSettable[Partial, Full] private (settable: Settable[Tentative[Partial, Full]])(implicit
+case class PartialSettable[Partial, Full](settable: Settable[Tentative[Partial, Full]])(implicit
   val partialityType: PartialityType[Partial, Full]
 ) {
   if (!scalajs.runtime.linkingInfo.productionMode) {
