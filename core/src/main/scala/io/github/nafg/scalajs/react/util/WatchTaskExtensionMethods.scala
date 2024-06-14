@@ -59,7 +59,7 @@ class WatchTaskExtensionMethods(busyIndicator: GlobalBusyIndicator, messages: Me
             .tap(promise.complete)
             .flatMap(triedA => AsyncCallback.const(triedA))
         }
-    override def watch: AsyncCallback[A]       = run(future => notifyFailure(busyIndicator.showBusy(future)))
+    override def watch: AsyncCallback[A] = run(future => notifyFailure(busyIndicator.showBusy(future)))
     override def watchResult: AsyncCallback[A] = run(future => notifyResult(busyIndicator.showBusy(future)))
   }
 }
