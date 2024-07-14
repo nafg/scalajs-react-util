@@ -30,7 +30,7 @@ ThisBuild / versionScheme := Some("early-semver")
 
 def sjsCrossTarget = crossTarget ~= (new File(_, "sjs" + scalaJSVersion))
 
-def addScalajsReactModule(name: String) = libraryDependencies += "com.github.japgolly.scalajs-react" %%% name % "2.1.1"
+def addScalajsReactModule(name: String) = libraryDependencies += "com.github.japgolly.scalajs-react" %%% name % "2.1.2"
 
 publish / skip := true
 
