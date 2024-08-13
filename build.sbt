@@ -44,7 +44,7 @@ lazy val core =
       addScalajsReactModule("extra"),
       libraryDependencies ++= Seq(
         "org.scala-js" %%% "scala-js-macrotask-executor" % "1.1.1",
-        "dev.optics"   %%% "monocle-macro"               % "3.2.0"
+        "dev.optics"   %%% "monocle-macro"               % "3.3.0"
       )
     )
 
