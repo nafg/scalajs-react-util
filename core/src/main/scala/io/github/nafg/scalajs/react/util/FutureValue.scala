@@ -19,6 +19,9 @@ case class FutureValue[A](value: Option[Try[A]] = None) {
       case Some(Success(a))         => ifSuccess(a)
       case Some(Failure(throwable)) => ifFailure(throwable)
     }
+
+  def getOrElse[B >: A](default: => B): B =
+    fold(identity, _ => default, default)
 }
 
 object FutureValue {
