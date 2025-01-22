@@ -23,6 +23,8 @@ case class FutureValue[A](value: Option[Try[A]] = None) {
 
   def getOrElse[B >: A](default: => B): B =
     fold(identity, _ => default, default)
+
+  def map[B](f: A => B): FutureValue[B] = FutureValue(value.map(_.map(f)))
 }
 
 object FutureValue {
