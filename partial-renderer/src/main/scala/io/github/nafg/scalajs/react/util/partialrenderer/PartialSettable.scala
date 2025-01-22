@@ -10,7 +10,7 @@ import monocle.{Focus, Iso, Lens}
 case class PartialSettable[Partial, Full](settable: Settable[Tentative[Partial, Full]])(implicit
   val partialityType: PartialityType[Partial, Full]
 ) {
-  if (!scalajs.runtime.linkingInfo.productionMode) {
+  if (!scalajs.LinkingInfo.productionMode) {
     val normalized = partialityType.normalize(value)
     if (normalized != value) {
       dom.console.error(s"\n  $value\nnormalizes to\n  $normalized")
