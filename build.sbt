@@ -61,6 +61,6 @@ lazy val `partial-renderer` =
     .settings(
       sjsCrossTarget,
       addScalajsReactModule("extra-ext-monocle3"),
-      libraryDependencies += "org.scalameta" %%% "munit" % "1.0.4" % Test,
+      libraryDependencies += "org.scalameta" %%% "munit" % "1.1.0" % Test,
       testFrameworks += new TestFramework("munit.Framework")
     )
