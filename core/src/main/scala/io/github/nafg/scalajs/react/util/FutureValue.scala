@@ -27,6 +27,12 @@ case class FutureValue[A](value: Option[Try[A]] = None) {
     fold(identity, _ => default, default)
 
   def map[B](f: A => B): FutureValue[B] = FutureValue(value.map(_.map(f)))
+
+  def flatMap[B](f: A => FutureValue[B]): FutureValue[B] = value match {
+    case None                     => FutureValue(None)
+    case Some(Failure(throwable)) => FutureValue(Some(Failure(throwable)))
+    case Some(Success(a))         => f(a)
+  }
 }
 
 object FutureValue {
