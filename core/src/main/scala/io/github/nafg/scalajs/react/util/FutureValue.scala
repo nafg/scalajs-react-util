@@ -9,6 +9,8 @@ import japgolly.scalajs.react.hooks.Hooks
 import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.{AsyncCallback, Reusability}
 
+import cats.Functor
+
 case class FutureValue[A](value: Option[Try[A]] = None) {
   def fold[B](
     ifSuccess: A => B,
@@ -31,6 +33,10 @@ object FutureValue {
   private implicit val reuseThrowable: Reusability[Throwable]                = Reusability.by_==
   private implicit def reuseTry[A: Reusability]: Reusability[Try[A]]         = Reusability.by(_.toEither)
   implicit def reuseFutureValue[A: Reusability]: Reusability[FutureValue[A]] = Reusability.by(_.value)
+
+  implicit val futureValueFunctor: Functor[FutureValue] = new Functor[FutureValue] {
+    override def map[T, U](fa: FutureValue[T])(f: T => U): FutureValue[U] = fa.map(f)
+  }
 
   private def make[A](state: Hooks.UseState[FutureValue[A]], future: => Future[A]): AsyncCallback[Unit] =
     AsyncCallback
