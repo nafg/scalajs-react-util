@@ -33,6 +33,11 @@ case class FutureValue[A](value: Option[Try[A]] = None) {
     case Some(Failure(throwable)) => FutureValue(Some(Failure(throwable)))
     case Some(Success(a))         => f(a)
   }
+
+  def toFuture: Future[A] = value match {
+    case None    => Future.never
+    case Some(t) => Future.fromTry(t)
+  }
 }
 
 object FutureValue {
