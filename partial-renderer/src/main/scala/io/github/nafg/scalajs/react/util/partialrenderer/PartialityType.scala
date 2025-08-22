@@ -1,6 +1,7 @@
 package io.github.nafg.scalajs.react.util.partialrenderer
 
 import scala.annotation.unused
+import scala.util.Try
 
 import cats.implicits.catsSyntaxTuple2Semigroupal
 import monocle.Iso
@@ -46,6 +47,21 @@ object PartialityType {
     partialToFull: Partial => Either[String, Full]
   )(fullToPartial: Full => Partial, @unused dummy: Null = null): PartialityType[Partial, Full] =
     new PartialityType(default, partialToFull, fullToPartial)
+
+  /** @param default
+    *   The default partial value
+    * @param partialToFull
+    *   A function that attempts to convert a partial value to a full value. If the conversion throws an exception, it
+    *   will be caught and converted into an error message.
+    * @param fullToPartial
+    *   A function that maps a full value back to a partial value.
+    * @return
+    *   An instance of PartialityType representing the relationship between partial and full values.
+    */
+  def attempt[Partial, Full](default: Partial)(partialToFull: Partial => Full)(
+    fullToPartial: Full => Partial
+  ): PartialityType[Partial, Full] =
+    PartialityType(default)(partial => Try(partialToFull(partial)).toEither.left.map(_.getMessage))(fullToPartial)
 
   implicit def option[Full]: PartialityType[Option[Full], Full] =
     PartialityType(Option.empty[Full])(_.toRight("Value is empty"))(Some(_))
