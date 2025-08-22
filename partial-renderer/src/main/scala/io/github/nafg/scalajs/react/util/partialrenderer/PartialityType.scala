@@ -34,6 +34,12 @@ case class PartialityType[Partial, Full](
     } { case (f1, f2) =>
       (this.fullToPartial(f1), that.fullToPartial(f2))
     }
+
+  def withDefaultAsNone: PartialityType[Partial, Option[Full]] =
+    PartialityType[Partial, Option[Full]](default) {
+      case `default` => Right(None)
+      case other     => partialToFull(other).map(Some(_))
+    }(_.fold(default)(fullToPartial))
 }
 object PartialityType {
   def apply[Partial, Full](default: Partial)(
