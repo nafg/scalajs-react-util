@@ -1,12 +1,19 @@
 package io.github.nafg.scalajs.react.util.partialrenderer
 
+import japgolly.scalajs.react.Reusability
+
 import monocle.{Iso, Lens}
 
 sealed trait Tentative[+P, +F] {
   def error: Option[String]
-  def mapFull[F1 >: F, F2](f: F1 => F2): Tentative[P, F2]
   def mapPartial[P1 >: P, P2](f: P1 => P2): Tentative[P2, F]
+  def mapFull[F1 >: F, F2](f: F1 => F2): Tentative[P, F2]
   def fold[A](onPartial: P => A, onFull: F => A): A
+  def toEither: Either[P, F]
+  final def isFull = this match {
+    case _: Tentative.Partial[?] => false
+    case _: Tentative.Full[?]    => true
+  }
   def partialValue[P1 >: P, F1 >: F](implicit partialityType: PartialityType[P1, F1]): P1
 }
 
@@ -16,6 +23,7 @@ object Tentative {
     override def mapPartial[P1 >: P, P2](f: P1 => P2): Partial[P2]   = Partial(f(partial), error)
     override def mapFull[F1 >: Nothing, F2](f: F1 => F2): Partial[P] = this
     override def fold[A](onPartial: P => A, onFull: Nothing => A): A = onPartial(partial)
+    override def toEither: Either[P, Nothing]                        = Left(partial)
     override def partialValue[P1 >: P, F1 >: Nothing](implicit partialityType: PartialityType[P1, F1]): P1 = partial
   }
 
@@ -25,6 +33,7 @@ object Tentative {
     override def mapPartial[P1 >: Nothing, P2](f: P1 => P2): Full[F] = this
     override def mapFull[F1 >: F, F2](f: F1 => F2): Full[F2]         = Full(f(full))
     override def fold[A](onPartial: Nothing => A, onFull: F => A): A = onFull(full)
+    override def toEither: Either[Nothing, F]                        = Right(full)
     override def partialValue[P1 >: Nothing, F1 >: F](implicit partialityType: PartialityType[P1, F1]): P1 =
       partialityType.fullToPartial(full)
   }
@@ -62,4 +71,7 @@ object Tentative {
       }
     }
   }
+
+  implicit def reuseTentative[P: Reusability, F: Reusability]: Reusability[Tentative[P, F]] =
+    Reusability.by(_.toEither)
 }
