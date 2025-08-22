@@ -4,6 +4,7 @@ import org.scalajs.dom
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.ReactMonocle.MonocleReactExt_StateSnapshot
 import japgolly.scalajs.react.extra.StateSnapshot
+import japgolly.scalajs.react.hooks.CustomHook
 
 import monocle.{Focus, Iso, Lens}
 
@@ -17,11 +18,18 @@ case class PartialSettable[Partial, Full](settable: Settable[Tentative[Partial, 
     }
   }
 
-  def error = value.error
-
   def value: Tentative[Partial, Full] = settable.value
 
+  def error = value.error
+
   def partialValue: Partial = value.partialValue
+
+  /** Checks if the current state is in a `Full` state.
+    *
+    * @return
+    *   true if the value is in a full state, false otherwise.
+    */
+  def isFull = value.isFull
 
   private def setCB(tentative: Tentative[Partial, Full]): Callback = settable.set(tentative)
 
@@ -75,4 +83,11 @@ object PartialSettable {
     settable: PartialSettable[(P1, P2), (F1, F2)]
   )(pt1: PartialityType[P1, F1], pt2: PartialityType[P2, F2]): (PartialSettable[P1, F1], PartialSettable[P2, F2]) =
     (settable.zoom(first, first)(pt1), settable.zoom(second, second)(pt2))
+
+  def usePartialSettable[P, F](
+    initial: Tentative[P, F]
+  )(implicit partialityType: PartialityType[P, F]): CustomHook[Unit, PartialSettable[P, F]] =
+    Settable
+      .useSettable(initial)
+      .map(PartialSettable(_))
 }
