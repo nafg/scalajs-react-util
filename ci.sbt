@@ -5,7 +5,14 @@ inThisBuild(
     developers                          := List(
       Developer("nafg", "Naftoli Gugenheim", "98384+nafg@users.noreply.github.com", url("https://github.com/nafg"))
     ),
-    dynverGitDescribeOutput ~= (_.map(o => o.copy(dirtySuffix = sbtdynver.GitDirtySuffix("")))),
+    dynverGitDescribeOutput             :=
+      dynverGitDescribeOutput.value.map { o =>
+        if (o.isSnapshot()) {
+          // Trick to get "-SNAPSHOT" without the other bits
+          o.copy(commitSuffix = sbtdynver.GitCommitSuffix(0, ""), dirtySuffix = sbtdynver.GitDirtySuffix("+"))
+        } else
+          o
+      },
     dynverSonatypeSnapshots             := true,
     githubWorkflowScalaVersions         := List("2.13.x", "3.x"),
     githubWorkflowTargetTags ++= Seq("v*"),
