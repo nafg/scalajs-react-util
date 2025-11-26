@@ -19,13 +19,13 @@ object AsyncStateFromProps {
     apply[P, C, S, B, US](_ != _)(compute)
   def const[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](predicate: (P, P) => Boolean)(
     compute: (P, S, B) => Future[S]
-  ) =
+  )                                                                                                             =
     apply[P, C, S, B, US](predicate)(compute(_, _, _).map(fnConst))
   def constAlways[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](compute: (P, S, B) => Future[S]) =
     apply[P, C, S, B, US](_ != _)(compute(_, _, _).map(fnConst))
   def apply[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](predicate: (P, P) => Boolean)(
     compute: (P, S, B) => Future[S => S]
-  ) =
+  )                                                                                                             =
     (self: LastStep[P, C, S, B, US]) => ext(self).asyncStateFromProps(predicate)(compute)
 
   implicit class ext[P, C <: Children, S, B <: IsUnmounted, US <: UpdateSnapshot](self: LastStep[P, C, S, B, US]) {
