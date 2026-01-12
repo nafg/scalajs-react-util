@@ -11,9 +11,10 @@ def myScalacOptions(version: String) =
   ScalacOptions.all(version)(
     (opts: options.Common) =>
       opts.deprecation ++
-        opts.unchecked ++
         opts.feature,
-    (_: options.V2).explaintypes,
+    (opts: options.V2) =>
+      opts.unchecked ++
+        opts.explaintypes,
     (_: options.V2_13).Xlint("_"),
     (opts: options.V2_13_6_+) =>
       opts.WdeadCode ++
