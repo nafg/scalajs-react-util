@@ -31,7 +31,7 @@ ThisBuild / versionScheme := Some("early-semver")
 
 def sjsCrossTarget = crossTarget ~= (new File(_, "sjs" + scalaJSVersion))
 
-def addScalajsReactModule(name: String) = libraryDependencies += "com.github.japgolly.scalajs-react" %%% name % "2.1.3"
+def addScalajsReactModule(name: String) = libraryDependencies += "com.github.japgolly.scalajs-react" %%% name % "3.0.0"
 
 publish / skip := true
 
@@ -63,5 +63,6 @@ lazy val `partial-renderer` =
       sjsCrossTarget,
       addScalajsReactModule("extra-ext-monocle3"),
       libraryDependencies += "org.scalameta" %%% "munit" % "1.2.1" % Test,
-      testFrameworks += new TestFramework("munit.Framework")
+      testFrameworks += new TestFramework("munit.Framework"),
+      Test / npmDependencies ++= Seq("react" -> "18.3.1")
     )
