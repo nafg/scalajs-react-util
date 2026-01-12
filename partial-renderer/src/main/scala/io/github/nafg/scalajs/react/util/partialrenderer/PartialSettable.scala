@@ -37,7 +37,7 @@ case class PartialSettable[Partial, Full](settable: Settable[Tentative[Partial, 
 
   def setFullCB(full: Full) = setCB(Tentative.Full(full))
 
-  def modify = settable.modify
+  def modify = settable.modify _
 
   def modPartial(f: Partial => Partial) = modify(partialityType.iso.modify(f))
 
