@@ -73,9 +73,9 @@ object ReactImplicits {
           makeListener = $ => makeListener(_)(ev.substituteContra[$]($))
         )
 
-      ev.substituteContra[Step4Out]
+      (ev.substituteContra[Step4Out] _)
         .compose(config)
-        .compose(ev.substituteCo[Step4In])
+        .compose(ev.substituteCo[Step4In] _)
         .apply(self)
     }
   }
