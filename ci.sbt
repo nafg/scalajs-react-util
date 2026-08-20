@@ -14,6 +14,7 @@ inThisBuild(
           o
       },
     dynverSonatypeSnapshots             := true,
+    githubWorkflowJavaVersions          := Seq(JavaSpec.temurin("17")),
     githubWorkflowScalaVersions         := List("2.13.x", "3.x"),
     githubWorkflowTargetTags ++= Seq("v*"),
     githubWorkflowPublishTargetBranches := Seq(RefPredicate.StartsWith(Ref.Tag("v"))),
