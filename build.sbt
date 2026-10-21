@@ -39,14 +39,19 @@ lazy val core =
   project
     .enablePlugins(ScalaJSBundlerPlugin)
     .settings(
-      moduleName := "core",
+      moduleName             := "core",
       sjsCrossTarget,
       addScalajsReactModule("core"),
       addScalajsReactModule("extra"),
       libraryDependencies ++= Seq(
-        "org.scala-js" %%% "scala-js-macrotask-executor" % "1.1.1",
-        "dev.optics"   %%% "monocle-macro"               % "3.3.0"
-      )
+        "org.scala-js"  %%% "scala-js-macrotask-executor" % "1.1.1",
+        "dev.optics"    %%% "monocle-macro"               % "3.3.0",
+        "org.scalameta" %%% "munit"                       % "1.3.6" % Test
+      ),
+      testFrameworks += new TestFramework("munit.Framework"),
+      Test / requireJsDomEnv := true,
+      // The jsdom test environment is bundled with webpack 4, whose MD4 hashing Node 17+ only allows with this flag
+      webpackNodeArgs        := Seq("--openssl-legacy-provider")
     )
 
 lazy val editor =
