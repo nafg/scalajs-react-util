@@ -63,8 +63,12 @@ object PartialityType {
   ): PartialityType[Partial, Full] =
     PartialityType(default)(partial => Try(partialToFull(partial)).toEither.left.map(_.getMessage))(fullToPartial)
 
+  private val optionAny: PartialityType[Option[Any], Any] =
+    PartialityType(Option.empty[Any])(_.toRight("Value is empty"))(Some(_))
+
+  /** Always the same instance */
   implicit def option[Full]: PartialityType[Option[Full], Full] =
-    PartialityType(Option.empty[Full])(_.toRight("Value is empty"))(Some(_))
+    optionAny.asInstanceOf[PartialityType[Option[Full], Full]]
 
   def full[Full](default: Full): PartialityType[Full, Full] =
     PartialityType(default)(Right(_))(identity)
