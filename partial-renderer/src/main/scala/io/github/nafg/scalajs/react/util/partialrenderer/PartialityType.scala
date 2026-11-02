@@ -66,7 +66,9 @@ object PartialityType {
   private val optionAny: PartialityType[Option[Any], Any] =
     PartialityType(Option.empty[Any])(_.toRight("Value is empty"))(Some(_))
 
-  /** Always the same instance */
+  /** `None` is incomplete, and `Some(a)` is complete with `a`. Every call returns the same instance, whatever `Full`
+    * is.
+    */
   implicit def option[Full]: PartialityType[Option[Full], Full] =
     optionAny.asInstanceOf[PartialityType[Option[Full], Full]]
 

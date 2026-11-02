@@ -48,7 +48,8 @@ case class PartialSettable[Partial, Full](settable: Settable[Tentative[Partial, 
   /** Zooms through `lens`, normalizing the result with `partialityType2`.
     *
     * @param key
-    *   Everything `lens` depends on. `partialityType2` is added to it.
+    *   The values `lens` was built from, such as the lens itself. The result's modifier is keyed on these and
+    *   `partialityType2`.
     */
   private def zoomKeyed[P2, F2](lens: Lens[Tentative[Partial, Full], Tentative[P2, F2]], key: Reusable[Any])(implicit
     partialityType2: PartialityType[P2, F2]
@@ -59,7 +60,10 @@ case class PartialSettable[Partial, Full](settable: Settable[Tentative[Partial, 
     )
   }
 
-  /** The child's modifier is reusable while this one is and `lens` and `partialityType2` are the same instances. */
+  /** A `PartialSettable` for the part of the value that `lens` focuses on, normalized with `partialityType2`. Its
+    * modifier is reusable while this one is and `lens` and `partialityType2` are the same instances, so a lens built
+    * inline makes it never reusable.
+    */
   def zoom[P2, F2](lens: Lens[Tentative[Partial, Full], Tentative[P2, F2]])(implicit
     partialityType2: PartialityType[P2, F2]
   ): PartialSettable[P2, F2] =
@@ -70,8 +74,9 @@ case class PartialSettable[Partial, Full](settable: Settable[Tentative[Partial, 
   )(implicit partialityType2: PartialityType[P2, F2]): PartialSettable[P2, F2] =
     PartialSettable(settable.zoom(get)(set))
 
-  /** The child's modifier is reusable while this one is and `lensPartial`, `lensFull`, this `partialityType` and
-    * `partialityType2` are the same instances.
+  /** A `PartialSettable` for the part of the value that `lensPartial` and `lensFull` focus on, normalized with
+    * `partialityType2`. Its modifier is reusable while this one is and `lensPartial`, `lensFull`, this `partialityType`
+    * and `partialityType2` are the same instances, so a lens built inline makes it never reusable.
     */
   def zoom[P2, F2](lensPartial: Lens[Partial, P2], lensFull: Lens[Full, F2])(implicit
     partialityType2: PartialityType[P2, F2]

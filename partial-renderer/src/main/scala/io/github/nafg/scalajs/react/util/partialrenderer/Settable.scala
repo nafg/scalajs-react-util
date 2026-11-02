@@ -22,21 +22,28 @@ case class Settable[A](value: A)(val modifier: Reusable[(A => A) => Callback]) {
   /** A `Settable` whose modifier applies `lift(f)` through this one's.
     *
     * @param key
-    *   Everything other than this modifier that `lift` depends on. The child's modifier is reusable while this modifier
-    *   and `key` are.
+    *   The values `lift` closes over, such as a lens. The child's modifier is reusable while this modifier and `key`
+    *   are.
     */
   private[partialrenderer] def derive[B](childValue: B, key: Reusable[Any])(lift: (B => B) => A => A): Settable[B] =
     Settable(childValue)((modifier *> key).withValue((f: B => B) => modify(lift(f))))
 
-  /** The child's modifier is reusable while this modifier is and `lens` is the same instance. */
+  /** A `Settable` for the part of the value that `lens` focuses on. Its modifier is reusable while this one is and
+    * `lens` is the same instance, so a lens built inline makes it never reusable.
+    */
   def zoom[B](lens: Lens[A, B]): Settable[B] =
     derive(lens.get(value), Reusable.byRef(lens))(lens.modify)
 
-  /** The child's modifier is reusable while this modifier is and `get` and `set` are the same instances. */
+  /** A `Settable` for the part of the value that `get` reads and `set` writes. Its modifier is reusable while this one
+    * is and `get` and `set` are the same instances, so lambdas written inline make it never reusable.
+    */
   def zoom[B](get: A => B)(set: B => A => A): Settable[B] =
     derive(get(value), Reusable.byRef(get).tuple(Reusable.byRef(set)))(f => a => set(f(get(a)))(a))
 
-  /** The child's modifier is reusable while this modifier is and `get` and `reverseGet` are the same instances. */
+  /** A `Settable` for the value converted by `get`, converted back by `reverseGet` when modified. Its modifier is
+    * reusable while this one is and `get` and `reverseGet` are the same instances, so lambdas written inline make it
+    * never reusable.
+    */
   def xmap[B](get: A => B)(reverseGet: B => A): Settable[B] =
     derive(get(value), Reusable.byRef(get).tuple(Reusable.byRef(reverseGet)))(f => a => reverseGet(f(get(a))))
 }
@@ -61,7 +68,8 @@ object Settable                                                                {
   def of[I, S](i: I)(implicit t: StateAccessor.ReadImpureWritePure[I, S]): Settable[S] =
     Settable(t.state(i))(Reusable.never(f => t(i).modState(f)))
 
-  /** The modifier is reusable for as long as the component is mounted. */
+  /** Keeps the value in component state. The modifier is the same `Reusable` for as long as the component is mounted.
+    */
   def useSettable[A](initial: => A): CustomHook[Unit, Settable[A]] =
     CustomHook[Unit]
       .useReducerBy[A, A => A](reducer = _ => (state, modify) => modify(state), initialState = _ => initial)
