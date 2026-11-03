@@ -31,7 +31,10 @@ ThisBuild / versionScheme := Some("early-semver")
 
 def sjsCrossTarget = crossTarget ~= (new File(_, "sjs" + scalaJSVersion))
 
-def addScalajsReactModule(name: String) = libraryDependencies += "com.github.japgolly.scalajs-react" %%% name % "4.1.0"
+val scalajsReactVersion = "4.1.0"
+
+def addScalajsReactModule(name: String) =
+  libraryDependencies += "com.github.japgolly.scalajs-react" %%% name % scalajsReactVersion
 
 publish / skip := true
 
@@ -62,7 +65,13 @@ lazy val `partial-renderer` =
     .settings(
       sjsCrossTarget,
       addScalajsReactModule("extra-ext-monocle3"),
-      libraryDependencies += "org.scalameta" %%% "munit" % "1.3.6" % Test,
+      libraryDependencies ++= Seq(
+        "org.scalameta"                     %%% "munit" % "1.3.6" % Test,
+        "com.github.japgolly.scalajs-react" %%% "test"  % scalajsReactVersion % Test
+      ),
       testFrameworks += new TestFramework("munit.Framework"),
-      Test / npmDependencies ++= Seq("react" -> "18.3.1")
+      Test / requireJsDomEnv := true,
+      // scalajs-bundler's default webpack (5.24.3) hashes with md4, which Node 17+ rejects
+      webpack / version := "5.98.0",
+      Test / npmDependencies ++= Seq("react" -> "18.3.1", "react-dom" -> "18.3.1")
     )
