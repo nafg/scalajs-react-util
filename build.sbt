@@ -37,7 +37,7 @@ publish / skip := true
 
 lazy val core =
   project
-    .enablePlugins(ScalaJSBundlerPlugin)
+    .enablePlugins(ScalaJSPlugin)
     .settings(
       moduleName := "core",
       sjsCrossTarget,
@@ -51,18 +51,17 @@ lazy val core =
 
 lazy val editor =
   project
-    .enablePlugins(ScalaJSBundlerPlugin)
+    .enablePlugins(ScalaJSPlugin)
     .dependsOn(core)
     .settings(sjsCrossTarget, addScalajsReactModule("extra-ext-monocle3"))
 
 lazy val `partial-renderer` =
   project
-    .enablePlugins(ScalaJSBundlerPlugin)
+    .enablePlugins(ScalaJSPlugin)
     .dependsOn(core)
     .settings(
       sjsCrossTarget,
       addScalajsReactModule("extra-ext-monocle3"),
       libraryDependencies += "org.scalameta" %%% "munit" % "1.3.6" % Test,
-      testFrameworks += new TestFramework("munit.Framework"),
-      Test / npmDependencies ++= Seq("react" -> "18.3.1")
+      testFrameworks += new TestFramework("munit.Framework")
     )
