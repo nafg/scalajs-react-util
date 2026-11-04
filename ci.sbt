@@ -16,6 +16,8 @@ inThisBuild(
     dynverSonatypeSnapshots             := true,
     githubWorkflowJavaVersions          := Seq(JavaSpec.temurin("17")),
     githubWorkflowScalaVersions         := List("2.13.x", "3.x"),
+    // In sbt 2, test only runs tests it considers affected by changes, and it can skip some even on a clean build
+    githubWorkflowBuild                 := Seq(WorkflowStep.Sbt(List("testFull"), name = Some("Build project"))),
     githubWorkflowTargetTags ++= Seq("v*"),
     githubWorkflowPublishTargetBranches := Seq(RefPredicate.StartsWith(Ref.Tag("v"))),
     githubWorkflowPublish               := Seq(
