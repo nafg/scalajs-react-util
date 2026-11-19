@@ -42,9 +42,11 @@ lazy val core =
       addScalajsReactModule("core"),
       addScalajsReactModule("extra"),
       libraryDependencies ++= Seq(
-        "org.scala-js" %% "scala-js-macrotask-executor" % "1.1.1",
-        "dev.optics"   %% "monocle-macro"               % "3.3.0"
-      )
+        "org.scala-js"  %% "scala-js-macrotask-executor" % "1.1.1",
+        "dev.optics"    %% "monocle-macro"               % "3.3.0",
+        "org.scalameta" %% "munit"                       % "1.3.6" % Test
+      ),
+      testFrameworks += new TestFramework("munit.Framework")
     )
 
 lazy val editor =

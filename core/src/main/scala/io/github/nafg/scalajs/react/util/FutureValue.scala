@@ -7,7 +7,7 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits.global
 import japgolly.scalajs.react.hooks.CustomHook
 import japgolly.scalajs.react.hooks.Hooks
 import japgolly.scalajs.react.vdom.html_<^.*
-import japgolly.scalajs.react.{AsyncCallback, Reusability}
+import japgolly.scalajs.react.{AsyncCallback, Callback, CallbackTo, Reusability}
 
 import cats.Functor
 
@@ -49,17 +49,32 @@ object FutureValue {
     override def map[T, U](fa: FutureValue[T])(f: T => U): FutureValue[U] = fa.map(f)
   }
 
-  private def make[A](state: Hooks.UseState[FutureValue[A]], future: => Future[A]): AsyncCallback[Unit] =
-    AsyncCallback
-      .fromFuture(future)
-      .attemptTry
-      .flatMapSync(result => state.modState(_.copy(value = Some(result))))
+  /** An effect that starts `future` and passes its result to `setResult`, unless the cleanup it returns ran first.
+    *
+    * A `Future` can't be cancelled, so the cleanup doesn't stop it; it only makes its result be ignored.
+    */
+  private[util] def runQuery[A](future: => Future[A])(setResult: Try[A] => Callback): CallbackTo[Callback] =
+    CallbackTo {
+      var isCleanedUp = false
+      AsyncCallback
+        .fromFuture(future)
+        .attemptTry
+        .flatMapSync(result => setResult(result).unless_(isCleanedUp))
+        .toCallback
+        .runNow()
+      Callback {
+        isCleanedUp = true
+      }
+    }
+
+  private def runQueryInto[A](state: Hooks.UseState[FutureValue[A]], future: => Future[A]): CallbackTo[Callback] =
+    runQuery(future)(result => state.setState(FutureValue(Some(result))))
 
   def useQuery[D: Reusability, A](dep: D)(query: D => Future[A]) =
     CustomHook[Unit]
       .useState(FutureValue[A]())
       .useEffectWithDepsBy((_, _) => dep) { (_, state) => dep =>
-        make(state, query(dep))
+        runQueryInto(state, query(dep))
       }
       .buildReturning((_, state) => state.value)
 
@@ -79,8 +94,8 @@ object FutureValue {
       .useState(FutureValue[A](None))
       .useEffectWithDepsBy((_, _) => dep) { case ((), state) =>
         dep =>
-          state.setState(FutureValue(None)).asAsyncCallback >>
-            make(state, query(dep))
+          state.setState(FutureValue(None)) >>
+            runQueryInto(state, query(dep))
       }
       .buildReturning((_, state) => state.value)
 }
